@@ -1,0 +1,112 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ArrowRight, Compass, Menu, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const LINKS = [
+  { label: "Tours", href: "/tours" },
+  { label: "Hotels", href: "/hotels" },
+  { label: "Visas", href: "/visas" },
+  { label: "Hajj & Umrah", href: "/hajj-umrah" },
+  { label: "Contact", href: "/contact" },
+];
+
+export function SiteHeader({ siteName = "3M Tours & Travels", signedIn = false }: { siteName?: string; signedIn?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  return (
+    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-2.5" aria-label={`${siteName} home`}>
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[#075bb0] text-white shadow-sm">
+            <Compass className="h-5 w-5" />
+          </span>
+          <span className="leading-tight">
+            <span className="block text-[15px] font-bold tracking-tight text-ink">3M Tours</span>
+            <span className="block text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-400">&amp; Travels</span>
+          </span>
+        </Link>
+
+        <nav className="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
+          {LINKS.map((link) => {
+            const active = pathname === link.href || (link.href !== "/" && pathname.startsWith(`${link.href}/`));
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "rounded-full px-3.5 py-2 text-[12.5px] font-medium transition",
+                  active ? "bg-primary/10 text-primary" : "text-slate-600 hover:bg-slate-100 hover:text-ink",
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="hidden items-center gap-2 lg:flex">
+          <Link
+            href={signedIn ? "/admin" : "/login"}
+            className="rounded-full border border-slate-200 bg-white px-3.5 py-2 text-[12px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-ink"
+          >
+            {signedIn ? "Open workspace" : "Staff login"}
+          </Link>
+          <Link
+            href="/contact"
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-[12px] font-semibold text-white shadow-sm transition hover:bg-primary-strong"
+          >
+            Plan a trip <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 lg:hidden"
+          aria-expanded={open}
+          aria-label={open ? "Close menu" : "Open menu"}
+        >
+          {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+        </button>
+      </div>
+
+      {open ? (
+        <div className="border-t border-slate-200 bg-white px-4 pb-4 pt-2 lg:hidden">
+          <nav className="grid gap-1" aria-label="Mobile navigation">
+            {LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className="rounded-lg px-3 py-2.5 text-[13px] font-medium text-slate-700 hover:bg-slate-50"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="mt-3 grid gap-2 border-t border-slate-100 pt-3">
+            <Link
+              href="/contact"
+              onClick={() => setOpen(false)}
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-[12.5px] font-semibold text-white"
+            >
+              Plan a trip <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+            <Link
+              href={signedIn ? "/admin" : "/login"}
+              onClick={() => setOpen(false)}
+              className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2.5 text-[12.5px] font-semibold text-slate-600"
+            >
+              {signedIn ? "Open workspace" : "Staff login"}
+            </Link>
+          </div>
+        </div>
+      ) : null}
+    </header>
+  );
+}
