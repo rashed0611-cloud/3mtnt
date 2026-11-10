@@ -9,6 +9,7 @@ import {
   ChevronDown,
   CircleUserRound,
   Command,
+  KeyRound,
   LogOut,
   Menu,
   PanelLeftOpen,
@@ -17,9 +18,10 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react";
-import { navigation } from "@/lib/nav";
+import { canViewModule, canWriteModule, normalizeRole, roleLabel } from "@/lib/access";
+import { navigationForRole } from "@/lib/nav-access";
 import type { SessionUser } from "@/lib/types";
-import { cn, initials, titleCase } from "@/lib/utils";
+import { cn, initials } from "@/lib/utils";
 import { logoutAction } from "@/app/login/actions";
 
 export interface HeaderNotification {
@@ -43,15 +45,17 @@ interface SearchEntry {
   group: string;
 }
 
-const searchIndex: SearchEntry[] = navigation.flatMap((section) =>
-  section.groups.flatMap((group) =>
-    group.items.map((item) => ({
-      label: item.label,
-      href: item.href,
-      group: group.label === item.label ? (section.label || "Workspace") : group.label,
-    })),
-  ),
-);
+function buildSearchIndex(role: SessionUser["role"]): SearchEntry[] {
+  return navigationForRole(normalizeRole(role)).flatMap((section) =>
+    section.groups.flatMap((group) =>
+      group.items.map((item) => ({
+        label: item.label,
+        href: item.href,
+        group: group.label === item.label ? (section.label || "Workspace") : group.label,
+      })),
+    ),
+  );
+}
 
 export function Header({ user, notifications, onOpenMobile, collapsed, onToggleCollapsed }: HeaderProps) {
   const router = useRouter();
@@ -60,6 +64,10 @@ export function Header({ user, notifications, onOpenMobile, collapsed, onToggleC
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [panel, setPanel] = useState<"none" | "notifications" | "user">("none");
+  const role = normalizeRole(user.role);
+  const searchIndex = useMemo(() => buildSearchIndex(user.role), [user.role]);
+  const canBook = canWriteModule(role, "bookings");
+  const canAdminister = canViewModule(role, "settings");
 
   useEffect(() => {
     setPanel("none");
@@ -89,7 +97,7 @@ export function Header({ user, notifications, onOpenMobile, collapsed, onToggleC
     return searchIndex
       .filter((entry) => entry.label.toLowerCase().includes(term) || entry.group.toLowerCase().includes(term))
       .slice(0, 7);
-  }, [query]);
+  }, [query, searchIndex]);
 
   const unread = notifications.filter((item) => item.severity !== "info").length || 3;
 
@@ -177,12 +185,14 @@ export function Header({ user, notifications, onOpenMobile, collapsed, onToggleC
         </div>
 
         <div className="ml-auto flex items-center gap-1 sm:gap-1.5">
-          <Link
-            href="/admin/create-booking"
-            className="hidden items-center gap-1.5 rounded-control bg-primary px-3 py-2 text-[12px] font-semibold text-white shadow-sm transition hover:bg-primary-strong sm:inline-flex"
-          >
-            <CalendarPlus className="h-3.5 w-3.5" /> New booking
-          </Link>
+          {canBook ? (
+            <Link
+              href="/admin/create-booking"
+              className="hidden items-center gap-1.5 rounded-control bg-primary px-3 py-2 text-[12px] font-semibold text-white shadow-sm transition hover:bg-primary-strong sm:inline-flex"
+            >
+              <CalendarPlus className="h-3.5 w-3.5" /> New booking
+            </Link>
+          ) : null}
 
           <div className="relative">
             <button
@@ -244,7 +254,7 @@ export function Header({ user, notifications, onOpenMobile, collapsed, onToggleC
             </span>
             <span className="hidden text-left lg:block">
               <span className="block max-w-[130px] truncate text-[12px] font-semibold leading-tight text-ink">{user.name}</span>
-              <span className="block text-[10px] leading-tight text-muted">{titleCase(user.role.replace(/_/g, " "))}</span>
+              <span className="block text-[10px] leading-tight text-muted">{roleLabel(user.role)}</span>
             </span>
             <ChevronDown className="hidden h-3.5 w-3.5 text-slate-400 lg:block" />
           </button>
@@ -257,18 +267,25 @@ export function Header({ user, notifications, onOpenMobile, collapsed, onToggleC
                   <p className="truncate text-[13px] font-semibold text-ink">{user.name}</p>
                   <p className="truncate text-[11px] text-muted">{user.email}</p>
                   <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                    <ShieldCheck className="h-2.5 w-2.5" /> {user.role}
+                    <ShieldCheck className="h-2.5 w-2.5" /> {roleLabel(user.role)}
                   </span>
                 </div>
-                <Link href="/admin/settings" className="mt-1 flex items-center gap-2 rounded-control px-2.5 py-2 text-[12.5px] text-slate-600 hover:bg-slate-50">
-                  <Settings className="h-3.5 w-3.5" /> Workspace settings
+                <Link href="/admin/account" className="mt-1 flex items-center gap-2 rounded-control px-2.5 py-2 text-[12.5px] text-slate-600 hover:bg-slate-50">
+                  <KeyRound className="h-3.5 w-3.5" /> Change password
                 </Link>
-                <Link href="/admin/activity-logs" className="flex items-center gap-2 rounded-control px-2.5 py-2 text-[12.5px] text-slate-600 hover:bg-slate-50">
-                  <ShieldCheck className="h-3.5 w-3.5" /> Activity & audit
-                </Link>
-                <Link href="/admin/users" className="flex items-center gap-2 rounded-control px-2.5 py-2 text-[12.5px] text-slate-600 hover:bg-slate-50">
-                  <CircleUserRound className="h-3.5 w-3.5" /> Team & roles
-                </Link>
+                {canAdminister ? (
+                  <>
+                    <Link href="/admin/settings" className="flex items-center gap-2 rounded-control px-2.5 py-2 text-[12.5px] text-slate-600 hover:bg-slate-50">
+                      <Settings className="h-3.5 w-3.5" /> Workspace settings
+                    </Link>
+                    <Link href="/admin/activity-logs" className="flex items-center gap-2 rounded-control px-2.5 py-2 text-[12.5px] text-slate-600 hover:bg-slate-50">
+                      <ShieldCheck className="h-3.5 w-3.5" /> Activity & audit
+                    </Link>
+                    <Link href="/admin/users" className="flex items-center gap-2 rounded-control px-2.5 py-2 text-[12.5px] text-slate-600 hover:bg-slate-50">
+                      <CircleUserRound className="h-3.5 w-3.5" /> Team & roles
+                    </Link>
+                  </>
+                ) : null}
                 <form action={logoutAction} className="mt-1 border-t border-line pt-1">
                   <button type="submit" className="flex w-full items-center gap-2 rounded-control px-2.5 py-2 text-left text-[12.5px] text-danger hover:bg-red-50">
                     <LogOut className="h-3.5 w-3.5" /> Sign out

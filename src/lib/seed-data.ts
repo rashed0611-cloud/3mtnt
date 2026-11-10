@@ -590,7 +590,7 @@ export function buildSeedData(): Database {
       siteName: "3M Tours & Travels ERP",
       tagline: "Travel operations, without the spreadsheets.",
       legalName: "3M Tours & Travels Ltd.",
-      email: "hello@3mtours.com",
+      email: "hello@3mtnt.com",
       phone: "+880 1711 000 000",
       address: "House 12, Road 7, Banani, Dhaka 1213, Bangladesh",
       defaultCurrency: "BDT",

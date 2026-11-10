@@ -12,7 +12,8 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { navigation } from "@/lib/nav";
+import { normalizeRole, roleLabel } from "@/lib/access";
+import { navigationForRole } from "@/lib/nav-access";
 import type { SessionUser } from "@/lib/types";
 import { cn, initials } from "@/lib/utils";
 import { logoutAction } from "@/app/login/actions";
@@ -37,15 +38,16 @@ function isItemActive(pathname: string, href: string) {
 
 export function Sidebar({ user, collapsed, onCollapsedChange, mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
+  const sections = useMemo(() => navigationForRole(normalizeRole(user.role)), [user.role]);
 
   const activeGroupLabel = useMemo(() => {
-    for (const section of navigation) {
+    for (const section of sections) {
       for (const group of section.groups) {
         if (group.items.some((item) => isItemActive(pathname, item.href))) return group.label;
       }
     }
     return "";
-  }, [pathname]);
+  }, [pathname, sections]);
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() =>
     activeGroupLabel ? { [activeGroupLabel]: true } : { Dashboard: true },
@@ -91,7 +93,7 @@ export function Sidebar({ user, collapsed, onCollapsedChange, mobileOpen, onMobi
       </div>
 
       <nav className={cn("min-h-0 flex-1 overflow-y-auto px-3 py-4", rail && "lg:px-2")}>
-        {navigation.map((section, sectionIndex) => (
+        {sections.map((section, sectionIndex) => (
           <div key={`${section.label}-${sectionIndex}`} className={cn(sectionIndex > 0 && "mt-5", rail && "lg:mt-3")}>
             {section.label ? (
               <p className={cn("mb-2 px-2.5 text-[9.5px] font-semibold uppercase tracking-[0.16em] text-slate-400", rail && "lg:hidden")}>
@@ -208,7 +210,7 @@ export function Sidebar({ user, collapsed, onCollapsedChange, mobileOpen, onMobi
           </div>
           <p className="mt-1 text-[10.5px] leading-4 text-muted">Onboarding, data imports and supplier setup.</p>
           <a
-            href="mailto:support@3mtours.com"
+            href="mailto:support@3mtnt.com"
             className="mt-2 inline-block text-[10.5px] font-semibold text-primary hover:underline"
           >
             Contact support →
@@ -224,7 +226,7 @@ export function Sidebar({ user, collapsed, onCollapsedChange, mobileOpen, onMobi
           </span>
           <div className={cn("min-w-0 flex-1", rail && "lg:hidden")}>
             <p className="truncate text-[12px] font-semibold text-ink">{user.name}</p>
-            <p className="truncate text-[10.5px] text-muted">{user.role}</p>
+            <p className="truncate text-[10.5px] text-muted">{roleLabel(user.role)}</p>
           </div>
           <form action={logoutAction}>
             <button

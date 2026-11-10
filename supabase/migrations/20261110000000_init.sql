@@ -257,7 +257,7 @@ create table if not exists public.app_settings (
   site_name text not null default '3M Tours & Travels ERP',
   tagline text not null default 'Travel operations, without the friction',
   legal_name text not null default '3M Tours & Travels Limited',
-  email text not null default 'hello@3mtours.com',
+  email text not null default 'hello@3mtnt.com',
   phone text not null default '+880 1700 000 000',
   address text not null default 'Dhaka, Bangladesh',
   default_currency text not null default 'BDT',

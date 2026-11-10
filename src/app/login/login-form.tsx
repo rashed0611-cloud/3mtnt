@@ -1,13 +1,13 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { ArrowRight, Eye, EyeOff, Loader2, LockKeyhole, Mail } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Loader2, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { loginAction, type LoginState } from "@/app/login/actions";
 
 const initialState: LoginState = {};
 
-export function LoginForm({ next, demo }: { next?: string; demo: { email: string; password: string } }) {
+export function LoginForm({ next }: { next?: string }) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
   const [email, setEmail] = useState(state.email ?? "");
   const [password, setPassword] = useState("");
@@ -47,14 +47,9 @@ export function LoginForm({ next, demo }: { next?: string; demo: { email: string
       </div>
 
       <div>
-        <div className="flex items-center justify-between">
-          <label htmlFor="password" className="label-base">
-            Password
-          </label>
-          <button type="button" className="mb-1.5 text-[11px] font-medium text-primary hover:underline">
-            Forgot password?
-          </button>
-        </div>
+        <label htmlFor="password" className="label-base">
+          Password
+        </label>
         <div className="relative">
           <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -90,26 +85,10 @@ export function LoginForm({ next, demo }: { next?: string; demo: { email: string
         {!pending ? <ArrowRight className="h-4 w-4" /> : null}
       </Button>
 
-      <div className="rounded-control border border-dashed border-slate-300 bg-slate-50/80 p-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Demo workspace</p>
-            <p className="mt-0.5 truncate font-mono text-[11px] text-slate-600">
-              {demo.email} / {demo.password}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setEmail(demo.email);
-              setPassword(demo.password);
-            }}
-            className="rounded-control bg-white px-2.5 py-1.5 text-[11px] font-semibold text-primary shadow-sm ring-1 ring-inset ring-primary/20 hover:bg-primary/5"
-          >
-            Use demo login
-          </button>
-        </div>
-      </div>
+      <p className="flex items-start gap-2 rounded-control border border-line bg-slate-50 px-3 py-2.5 text-[11.5px] leading-5 text-muted">
+        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+        Access is managed by your workspace administrator. Ask them to create an account or reset your password.
+      </p>
     </form>
   );
 }

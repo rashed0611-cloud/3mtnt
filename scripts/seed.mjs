@@ -6,7 +6,7 @@
  *   NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npm run db:seed
  *
  * The script generates the same realistic fictional dataset used by the local
- * demo (src/lib/seed-data.ts) and replaces the contents of the ERP tables.
+ * file store (src/lib/seed-data.ts) and replaces the contents of the ERP tables.
  *
  * Requires Node 22.6+ for TypeScript type stripping.
  */

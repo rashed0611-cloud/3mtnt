@@ -75,9 +75,9 @@ export function SiteFooter({ settings }: { settings: AppSettings }) {
         </div>
 
         <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-6 text-[11px] text-slate-500 sm:flex-row sm:items-center">
-          <p>© {new Date().getFullYear()} {settings.legalName}. All rights reserved. Fictional demo brand.</p>
+          <p>© {new Date().getFullYear()} {settings.legalName}. All rights reserved.</p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <span>Demo site · no live bookings</span>
+            <span>Independent travel agency · Dhaka, Bangladesh</span>
             <Link href="/login" className="transition hover:text-slate-300">Staff login</Link>
           </div>
         </div>

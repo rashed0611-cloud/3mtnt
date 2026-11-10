@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ArrowUpRight, BadgeCheck, ChartNoAxesCombined, Globe2, ShieldCheck, Sparkles } from "lucide-react";
 import { LoginForm } from "@/app/login/login-form";
-import { demoCredentials, getSessionUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -17,7 +17,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if (user) redirect("/admin");
 
   const { next } = await searchParams;
-  const demo = demoCredentials();
 
   return (
     <main className="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
@@ -95,7 +94,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             <p className="mt-1.5 text-sm text-muted">Sign in to your agency workspace to pick up where you left off.</p>
           </div>
 
-          <LoginForm next={next} demo={{ email: demo.email, password: demo.password }} />
+          <LoginForm next={next} />
 
           <p className="mt-7 text-center text-[11px] leading-5 text-muted">
             Protected by role-based access control. All actions in this workspace are recorded in the audit log.

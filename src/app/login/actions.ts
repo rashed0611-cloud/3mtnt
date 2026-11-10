@@ -3,11 +3,12 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
+  SESSION_COOKIE,
   clearSession,
-  createDemoToken,
-  demoCredentials,
+  createSessionToken,
+  localCredentials,
   sessionCookieOptions,
-  verifyDemoCredentials,
+  verifyLocalCredentials,
 } from "@/lib/auth";
 import { createSupabaseServerClient, isSupabaseConfigured } from "@/lib/supabase/server";
 
@@ -37,14 +38,14 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
     redirect(next);
   }
 
-  if (!verifyDemoCredentials(email, password)) {
-    return { error: "Those credentials do not match this workspace. Try the demo account below.", email };
+  if (!verifyLocalCredentials(email, password)) {
+    return { error: "Those credentials do not match this workspace.", email };
   }
 
-  const demo = demoCredentials();
-  const token = createDemoToken({ id: "demo-admin", name: demo.name, email: demo.email, role: "Super Administrator" });
+  const local = localCredentials();
+  const token = createSessionToken({ id: "local-admin", name: local.name, email: local.email, role: "superadmin" });
   const store = await cookies();
-  store.set("3m_demo_session", token, sessionCookieOptions());
+  store.set(SESSION_COOKIE, token, sessionCookieOptions());
   redirect(next);
 }
 

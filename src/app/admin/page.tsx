@@ -27,6 +27,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatusBadge, Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { canViewModule, canWriteModule, moduleForPath, normalizeRole } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
 import { computeDashboardStats, bookingSummary } from "@/lib/stats";
@@ -51,6 +52,10 @@ export default async function DashboardPage() {
     .filter((lead) => !["converted", "lost"].includes(lead.status))
     .reduce((sum, lead) => sum + lead.estimatedValue, 0);
   const firstName = user.name.split(" ")[0];
+  const role = normalizeRole(user.role);
+  const canCreateBooking = canWriteModule(role, "bookings");
+  const canViewFinance = canViewModule(role, "finance");
+  const availableActions = quickActions.filter((action) => canWriteModule(role, moduleForPath(action.href)));
   const openTasks = db.tasks
     .filter((task) => !["completed", "cancelled"].includes(task.status))
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
@@ -124,18 +129,22 @@ export default async function DashboardPage() {
             <span className="hidden items-center gap-1.5 rounded-control border border-line bg-white px-3 py-2 text-[12px] font-medium text-slate-600 sm:inline-flex">
               <CalendarCheck2 className="h-3.5 w-3.5 text-slate-400" /> This month
             </span>
-            <Link
-              href="/admin/profit-loss-report"
-              className="inline-flex items-center gap-1.5 rounded-control border border-line bg-white px-3 py-2 text-[12px] font-medium text-slate-600 hover:bg-slate-50"
-            >
-              <Download className="h-3.5 w-3.5" /> Reports
-            </Link>
-            <Link
-              href="/admin/create-booking"
-              className="inline-flex items-center gap-1.5 rounded-control bg-primary px-3.5 py-2 text-[12px] font-semibold text-white shadow-sm hover:bg-primary-strong"
-            >
-              <CalendarPlus className="h-3.5 w-3.5" /> Create booking
-            </Link>
+            {canViewFinance ? (
+              <Link
+                href="/admin/profit-loss-report"
+                className="inline-flex items-center gap-1.5 rounded-control border border-line bg-white px-3 py-2 text-[12px] font-medium text-slate-600 hover:bg-slate-50"
+              >
+                <Download className="h-3.5 w-3.5" /> Reports
+              </Link>
+            ) : null}
+            {canCreateBooking ? (
+              <Link
+                href="/admin/create-booking"
+                className="inline-flex items-center gap-1.5 rounded-control bg-primary px-3.5 py-2 text-[12px] font-semibold text-white shadow-sm hover:bg-primary-strong"
+              >
+                <CalendarPlus className="h-3.5 w-3.5" /> Create booking
+              </Link>
+            ) : null}
           </>
         }
       />
@@ -335,18 +344,24 @@ export default async function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-2 pt-3">
-              {quickActions.slice(0, 6).map(({ label, href, icon: Icon }) => (
-                <Link
-                  key={label}
-                  href={href}
-                  className="group flex items-start gap-2 rounded-control border border-line px-2.5 py-2.5 transition hover:border-primary/30 hover:bg-primary/[0.03]"
-                >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                    <Icon className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="text-[11.5px] font-medium leading-4 text-slate-600 group-hover:text-ink">{label}</span>
-                </Link>
-              ))}
+              {availableActions.length ? (
+                availableActions.slice(0, 6).map(({ label, href, icon: Icon }) => (
+                  <Link
+                    key={label}
+                    href={href}
+                    className="group flex items-start gap-2 rounded-control border border-line px-2.5 py-2.5 transition hover:border-primary/30 hover:bg-primary/[0.03]"
+                  >
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                      <Icon className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="text-[11.5px] font-medium leading-4 text-slate-600 group-hover:text-ink">{label}</span>
+                  </Link>
+                ))
+              ) : (
+                <p className="col-span-2 rounded-control border border-dashed border-line px-3 py-4 text-center text-[11.5px] text-muted">
+                  This role has view-only access, so no create shortcuts are shown.
+                </p>
+              )}
             </CardContent>
           </Card>
 

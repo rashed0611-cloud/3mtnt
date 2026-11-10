@@ -8,7 +8,8 @@ A production-shaped travel-agency ERP built with Next.js App Router, TypeScript,
 
 - **Repository:** <https://github.com/rashed0611-cloud/3mtnt>
 - **Database:** Supabase project `cekagddoithvlklhuosi` (PostgreSQL 17, `ap-south-1`) — schema applied and seeded with the fictional dataset.
-- **Admin sign-in:** `admin@3mtours.com` / `demo1234` (Supabase Auth user).
+- **Super-admin sign-in:** `superadmin@3mtnt.com` / `Welcome@3M2026`
+- **Workspace accounts:** five role-based accounts — see [Users & roles](#users--roles).
 
 ---
 
@@ -40,7 +41,7 @@ A production-shaped travel-agency ERP built with Next.js App Router, TypeScript,
 | Language | TypeScript 5.7 |
 | Validation | zod |
 | Backend | Supabase (PostgreSQL + Auth) or local JSON store |
-| Auth | Supabase Auth when configured; signed HMAC cookie in demo mode |
+| Auth | Supabase Auth when configured; signed session cookie for local development |
 
 ---
 
@@ -50,7 +51,7 @@ A production-shaped travel-agency ERP built with Next.js App Router, TypeScript,
 # 1. Install dependencies
 npm install
 
-# 2. Configure local demo defaults
+# 2. Configure environment defaults
 cp .env.example .env.local
 
 # 3. Run the app
@@ -59,14 +60,14 @@ npm run dev
 
 Open <http://localhost:3000>. You will be redirected to `/login`.
 
-**Demo credentials**
+**Local development sign-in** (only when Supabase is not configured)
 
 ```
-Email:    admin@3mtours.com
-Password: demo1234
+Email:    superadmin@3mtnt.com
+Password: Welcome@3M2026
 ```
 
-The local demo database lives in `.data/db.json` and is generated automatically on first access from `src/lib/seed-data.ts`. Delete `.data/` to reseed.
+The local file store lives in `.data/db.json` and is generated automatically on first access from `src/lib/seed-data.ts`. Delete `.data/` to reseed.
 
 ### Useful scripts
 
@@ -102,7 +103,7 @@ NEXT_PUBLIC_SITE_URL=https://your-public-domain.example
 npm run db:seed
 ```
 
-5. Create an Auth user in **Authentication → Users** for the admin account. When Supabase env vars are present the app authenticates with Supabase instead of the demo cookie.
+5. Create the five staff accounts in **Authentication → Users** (or with the Admin API) and set each user's `user_metadata.role` to one of `superadmin`, `admin`, `manager`, `account` or `guest`. When Supabase env vars are present the app authenticates with Supabase.
 
 > The service-role key is used only in server components, server actions and route handlers. Never expose it to the browser.
 
@@ -114,6 +115,24 @@ npm run db:seed
 - **Otherwise** → `JsonRepository` backed by `.data/db.json`
 
 The `Repository` contract in `src/lib/db/types.ts` keeps both implementations interchangeable.
+
+---
+
+## Users & roles
+
+The workspace ships with five role-based accounts. Every account starts with the password `Welcome@3M2026`; users can change it from **User menu → Change password** (`/admin/account`).
+
+| Account | Role | Access |
+| --- | --- | --- |
+| `superadmin@3mtnt.com` | Super Administrator | Everything, including settings and staff |
+| `admin@3mtnt.com` | Administrator | Everything, including settings and staff |
+| `manager@3mtnt.com` | Operations Manager | Bookings, tours, hotels, visas, Hajj, customers, CRM, tasks, B2B and communication |
+| `account@3mtnt.com` | Accounts Officer | Finance, invoices, payments, suppliers and reports, plus booking and customer overview |
+| `guest@3mtnt.com` | Guest | View-only across the workspace; cannot create, edit or delete records |
+
+Access is enforced in three places: the sidebar only lists permitted modules, `middleware.ts` blocks disallowed URLs, and every server action re-checks write permission before touching data. Guests additionally see a view-only banner.
+
+The role is read from `user_metadata.role` on the Supabase user. Change a user's role in **Authentication → Users** (or with the Admin API); the next sign-in applies it.
 
 ---
 
@@ -150,7 +169,7 @@ src/
 │  │  ├─ accounts-dashboard/    # finance overview
 │  │  ├─ activity-logs/  search/  notifications/  settings/
 │  │  └─ [...slug]/             # polished module scaffolds
-│  ├─ login/                    # demo/Supabase sign-in
+│  ├─ login/                    # Supabase / local sign-in
 │  ├─ sitemap.ts  robots.ts     # SEO routes
 │  └─ layout.tsx  globals.css
 ├─ components/
@@ -203,13 +222,13 @@ Invoices use `INV-<year>-<sequence>`.
 2. Import it into Vercel (or any Next.js host).
 3. Add the environment variables from `.env.example` in the hosting dashboard.
 4. Run the Supabase migration and seed script once.
-5. Deploy. `middleware.ts` protects `/admin`; server actions enforce session checks.
+5. Deploy. `middleware.ts` protects `/admin` and enforces module access; server actions and the repository guards enforce write permissions.
 
 ---
 
 ## Notes
 
-- Seed data is fictional and deterministic (fixed RNG seed) so screenshots and demos are repeatable.
+- Seed data is fictional and deterministic (fixed RNG seed) so screenshots and walkthroughs are repeatable.
 - The local JSON repository logs activity and generates invoices/payments just like the Supabase adapter.
 - Expense estimates are derived from booking margins so finance dashboards have meaningful cost and profit figures.
 - Navigation entries without a dedicated workflow resolve to `/admin/[...slug]`, which renders module metadata and links to live modules.

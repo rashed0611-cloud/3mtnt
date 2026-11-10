@@ -84,7 +84,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
             </div>
             <div className="space-y-1.5 sm:text-right">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Issued by</p>
-              <p className="text-[12px] font-medium text-ink">{settings.email || "hello@3mtours.com"}</p>
+              <p className="text-[12px] font-medium text-ink">{settings.email || "hello@3mtnt.com"}</p>
               <p className="text-[11px] text-slate-500">{settings.phone}</p>
               <p className="text-[11px] leading-5 text-slate-500">{settings.address}</p>
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] sm:justify-end">

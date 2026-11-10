@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     question: "Do you take payment online?",
-    answer: "Not on this demo site. In a live workspace, your specialist confirms availability and sends a secure payment link or invoice.",
+    answer: "Not through this website. Your specialist confirms availability and sends a secure payment link or invoice before any payment is due.",
   },
   {
     question: "How quickly will I hear back?",

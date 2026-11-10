@@ -44,7 +44,7 @@ export default async function SettingsPage() {
                   <Database className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-[11.5px] font-semibold text-ink">{supabase ? "Supabase connected" : "Local demo database"}</p>
+                  <p className="text-[11.5px] font-semibold text-ink">{supabase ? "Supabase connected" : "Local database"}</p>
                   <p className="text-[10px] text-muted">{supabase ? "Postgres · row-level security ready" : "File-backed workspace · .data/db.json"}</p>
                 </div>
               </div>
@@ -54,7 +54,7 @@ export default async function SettingsPage() {
                 </span>
                 <div>
                   <p className="text-[11.5px] font-semibold text-ink">Role-based access</p>
-                  <p className="text-[10px] text-muted">Super Administrator · full workspace access</p>
+                  <p className="text-[10px] text-muted">Five roles · superadmin, admin, manager, account and guest</p>
                 </div>
               </div>
               <div className="flex items-center gap-2.5 rounded-control border border-line px-3 py-2.5">
@@ -99,7 +99,7 @@ export default async function SettingsPage() {
 
           <div className="rounded-card border border-dashed border-slate-300 bg-white/60 p-3.5 text-[10.5px] leading-5 text-slate-500">
             <strong className="font-semibold text-slate-700">Production note:</strong> add Supabase keys to <code className="rounded bg-slate-100 px-1 py-0.5">.env.local</code> and run the
-            migration in <code className="rounded bg-slate-100 px-1 py-0.5">supabase/migrations</code> to switch from the local demo store.
+            migration in <code className="rounded bg-slate-100 px-1 py-0.5">supabase/migrations</code> to switch from the local file store.
           </div>
         </div>
       </div>

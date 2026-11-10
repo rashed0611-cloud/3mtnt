@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireModuleAccess } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
 import type { BookingInput, Lead, LeadStatus, TaskStatus, Tour } from "@/lib/types";
 import { toNumber, toText } from "@/lib/utils";
@@ -39,6 +40,7 @@ function parseLines(value: FormDataEntryValue | null) {
 /* ------------------------------------------------------------------ */
 
 export async function saveCustomerAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireModuleAccess("customers", "write");
   const id = toText(formData.get("id"));
   const name = toText(formData.get("name"));
   const email = toText(formData.get("email"));
@@ -82,6 +84,7 @@ export async function saveCustomerAction(_prev: FormState, formData: FormData): 
 /* ------------------------------------------------------------------ */
 
 export async function createTourAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireModuleAccess("tours", "write");
   const id = toText(formData.get("id"));
   const title = toText(formData.get("title"));
   const destination = toText(formData.get("destination"));
@@ -145,6 +148,7 @@ export async function createTourAction(_prev: FormState, formData: FormData): Pr
 /* ------------------------------------------------------------------ */
 
 export async function saveHotelAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireModuleAccess("hotels", "write");
   const id = toText(formData.get("id"));
   const name = toText(formData.get("name"));
   const location = toText(formData.get("location"));
@@ -188,6 +192,7 @@ export async function saveHotelAction(_prev: FormState, formData: FormData): Pro
 }
 
 export async function saveVisaAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireModuleAccess("visas", "write");
   const id = toText(formData.get("id"));
   const country = toText(formData.get("country"));
   const visaType = toText(formData.get("visaType"));
@@ -227,6 +232,7 @@ export async function saveVisaAction(_prev: FormState, formData: FormData): Prom
 }
 
 export async function saveHajjPackageAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireModuleAccess("hajj", "write");
   const id = toText(formData.get("id"));
   const title = toText(formData.get("title"));
   const departureDate = toText(formData.get("departureDate"));
@@ -283,6 +289,7 @@ export type CreateBookingResult =
   | { ok: false; error: string };
 
 export async function createBookingAction(input: BookingInput): Promise<CreateBookingResult> {
+  await requireModuleAccess("bookings", "write");
   if (!input.title?.trim()) return { ok: false, error: "Choose a service or package before confirming." };
   if (!input.customerId && !input.customerName?.trim()) return { ok: false, error: "Select an existing customer or enter a new one." };
   if (!input.startDate) return { ok: false, error: "A start date is required." };
@@ -302,6 +309,7 @@ export async function createBookingAction(input: BookingInput): Promise<CreateBo
 }
 
 export async function updateBookingStatusAction(formData: FormData) {
+  await requireModuleAccess("bookings", "write");
   const id = toText(formData.get("id"));
   const status = toText(formData.get("status")) as BookingInput["status"];
   const returnTo = toText(formData.get("returnTo")) || `/admin/all-bookings/${id}`;
@@ -313,6 +321,7 @@ export async function updateBookingStatusAction(formData: FormData) {
 }
 
 export async function bulkUpdateBookingStatusAction(ids: string[], status: BookingInput["status"]): Promise<{ updated: number }> {
+  await requireModuleAccess("bookings", "write");
   if (!ids.length || !status) return { updated: 0 };
   const repo = getRepository();
   let updated = 0;
@@ -325,6 +334,7 @@ export async function bulkUpdateBookingStatusAction(ids: string[], status: Booki
 }
 
 export async function addPaymentAction(formData: FormData) {
+  await requireModuleAccess(["bookings", "finance"], "write");
   const id = toText(formData.get("id"));
   const amount = toNumber(formData.get("amount"));
   const returnTo = toText(formData.get("returnTo")) || `/admin/all-bookings/${id}`;
@@ -340,6 +350,7 @@ export async function addPaymentAction(formData: FormData) {
 /* ------------------------------------------------------------------ */
 
 export async function createLeadAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireModuleAccess("crm", "write");
   const name = toText(formData.get("name"));
   const phone = toText(formData.get("phone"));
   const requirement = toText(formData.get("requirement"));
@@ -377,6 +388,7 @@ export async function createLeadAction(_prev: FormState, formData: FormData): Pr
 }
 
 export async function updateLeadStatusAction(formData: FormData) {
+  await requireModuleAccess("crm", "write");
   const id = toText(formData.get("id"));
   const status = toText(formData.get("status")) as LeadStatus;
   const returnTo = toText(formData.get("returnTo")) || "/admin/crm/leads";
@@ -392,6 +404,7 @@ export async function updateLeadStatusAction(formData: FormData) {
 /* ------------------------------------------------------------------ */
 
 export async function createTaskAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireModuleAccess("tasks", "write");
   const title = toText(formData.get("title"));
   if (!title) return { fieldErrors: { title: "Give the task a short, action-oriented title." } };
 
@@ -414,6 +427,7 @@ export async function createTaskAction(_prev: FormState, formData: FormData): Pr
 }
 
 export async function updateTaskStatusAction(formData: FormData) {
+  await requireModuleAccess("tasks", "write");
   const id = toText(formData.get("id"));
   const status = toText(formData.get("status")) as TaskStatus;
   const returnTo = toText(formData.get("returnTo")) || "/admin/task-management/tasks";
@@ -429,6 +443,7 @@ export async function updateTaskStatusAction(formData: FormData) {
 /* ------------------------------------------------------------------ */
 
 export async function updateSettingsAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireModuleAccess("settings", "write");
   const siteName = toText(formData.get("siteName"));
   if (!siteName) return { fieldErrors: { siteName: "The workspace name cannot be empty." } };
   const taxRate = toNumber(formData.get("taxRate"));
