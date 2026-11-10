@@ -116,7 +116,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title={`Good morning, ${firstName}`}
+        title={`Assalamu Alaikum, ${firstName}`}
         description="Here is the pulse of your agency today — bookings, cash flow and work that needs a decision."
         breadcrumb={[{ label: "Workspace", href: "/admin" }, { label: "Dashboard" }]}
         actions={
