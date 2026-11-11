@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
@@ -102,7 +102,9 @@ function ImagePicker({
   previewClassName?: string;
 }) {
   const [local, setLocal] = useState<string | null>(null);
+  const [fileName, setFileName] = useState("");
   const objectUrl = useRef<string | null>(null);
+  const fieldId = useId();
 
   useEffect(() => {
     return () => {
@@ -133,6 +135,7 @@ function ImagePicker({
           />
           <div className="flex flex-wrap items-center gap-2">
             <input
+              id={fieldId}
               type="file"
               name={fileFieldName}
               accept={accept}
@@ -142,12 +145,23 @@ function ImagePicker({
                 if (file) {
                   objectUrl.current = URL.createObjectURL(file);
                   setLocal(objectUrl.current);
+                  setFileName(file.name);
                 } else {
                   setLocal(null);
+                  setFileName("");
                 }
               }}
-              className="block max-w-full rounded-control border border-dashed border-line bg-slate-50/60 px-2.5 py-1.5 text-[11px] text-slate-500 file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-1 file:text-[10.5px] file:font-semibold file:text-white"
+              className="sr-only"
             />
+            <label
+              htmlFor={fieldId}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-control border border-line bg-white px-2.5 py-1.5 text-[10.5px] font-semibold text-slate-600 transition hover:border-primary/40 hover:text-primary"
+            >
+              <Upload className="h-3 w-3" /> Upload image
+            </label>
+            <span className="max-w-[140px] truncate text-[10.5px] text-slate-400">
+              {fileName || "JPG, PNG, SVG or WebP"}
+            </span>
             {value ? (
               <button
                 type="button"
@@ -199,6 +213,9 @@ export function HomepageForm({ settings }: { settings: AppSettings }) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(updateHomepageAction, initialState);
   const [tab, setTab] = useState<TabKey>("content");
+  const [faviconName, setFaviconName] = useState("");
+  const [galleryFiles, setGalleryFiles] = useState<string[]>([]);
+  const faviconFieldId = useId();
   const [rows, setRows] = useState<GalleryImage[]>(settings.gallery);
   const [appearance, setAppearance] = useState<SiteAppearance>(settings.appearance);
   const [hero, setHero] = useState({
@@ -375,11 +392,22 @@ export function HomepageForm({ settings }: { settings: AppSettings }) {
                       )}
                     </span>
                     <input
+                      id={faviconFieldId}
                       type="file"
                       name="faviconFile"
                       accept="image/png,image/svg+xml,image/x-icon,image/vnd.microsoft.icon"
-                      className="block w-full rounded-control border border-dashed border-line bg-slate-50/60 px-2.5 py-1.5 text-[11px] text-slate-500 file:mr-2 file:rounded file:border-0 file:bg-primary file:px-2 file:py-1 file:text-[10.5px] file:font-semibold file:text-white"
+                      onChange={(event) => setFaviconName(event.target.files?.[0]?.name ?? "")}
+                      className="sr-only"
                     />
+                    <label
+                      htmlFor={faviconFieldId}
+                      className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-control border border-line bg-white px-2.5 py-1.5 text-[10.5px] font-semibold text-slate-600 transition hover:border-primary/40 hover:text-primary"
+                    >
+                      <Upload className="h-3 w-3" /> Upload icon
+                    </label>
+                    <span className="min-w-0 truncate text-[10.5px] text-slate-400">
+                      {faviconName || "PNG, SVG or ICO"}
+                    </span>
                   </div>
                 </Field>
               </div>
@@ -815,13 +843,25 @@ export function HomepageForm({ settings }: { settings: AppSettings }) {
 
             <Field label="Upload images" hint="JPG, PNG, WebP, GIF, AVIF or SVG · up to 4 MB each. Uploaded images are appended to the gallery.">
               <input
+                id={faviconFieldId + "-gallery"}
                 type="file"
                 name="galleryFiles"
                 accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/svg+xml"
                 multiple
                 aria-label="Upload gallery images"
-                className="block w-full rounded-control border border-dashed border-line bg-slate-50/60 px-3 py-2.5 text-[11.5px] text-slate-500 file:mr-3 file:rounded file:border-0 file:bg-primary file:px-2.5 file:py-1.5 file:text-[11px] file:font-semibold file:text-white"
+                onChange={(event) => setGalleryFiles([...(event.target.files ?? [])].map((file) => file.name))}
+                className="sr-only"
               />
+              <label
+                htmlFor={faviconFieldId + "-gallery"}
+                className="flex cursor-pointer flex-col items-center gap-1 rounded-control border border-dashed border-line bg-slate-50/60 px-3 py-5 text-center transition hover:border-primary/40 hover:bg-primary/5"
+              >
+                <ImagePlus className="h-5 w-5 text-slate-400" />
+                <span className="text-[11.5px] font-semibold text-slate-600">Choose images to upload</span>
+                <span className="max-w-full truncate text-[10.5px] text-slate-400">
+                  {galleryFiles.length ? galleryFiles.join(", ") : "JPG, PNG, WebP, GIF, AVIF or SVG"}
+                </span>
+              </label>
             </Field>
           </div>
 
