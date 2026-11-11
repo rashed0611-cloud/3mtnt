@@ -85,6 +85,7 @@ export async function saveCustomerAction(_prev: FormState, formData: FormData): 
 
 export async function createTourAction(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireModuleAccess("tours", "write");
+  const settings = await getRepository().getSettings();
   const id = toText(formData.get("id"));
   const title = toText(formData.get("title"));
   const destination = toText(formData.get("destination"));
@@ -118,7 +119,7 @@ export async function createTourAction(_prev: FormState, formData: FormData): Pr
     childPrice: toNumber(formData.get("childPrice"), Math.round(adultPrice * 0.65)),
     currency: "BDT",
     capacity: Math.max(1, toNumber(formData.get("capacity"), 20)),
-    status: (toText(formData.get("status")) || "active") as Tour["status"],
+    status: (toText(formData.get("status")) || settings.tourDefaultStatus) as Tour["status"],
     featured: formData.get("featured") === "on",
     supplier: toText(formData.get("supplier")) || "Own inventory",
     description: toText(formData.get("description")),
@@ -467,5 +468,49 @@ export async function updateSettingsAction(_prev: FormState, formData: FormData)
     return { message: "Workspace settings saved. Changes apply immediately." };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Could not save settings." };
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Tour settings                                                       */
+/* ------------------------------------------------------------------ */
+
+export async function updateTourSettingsAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireModuleAccess("tours", "write");
+
+  const tourDefaultStatus = toText(formData.get("tourDefaultStatus")) === "draft" ? "draft" : "active";
+  const tourCancellationDays = Math.round(toNumber(formData.get("tourCancellationDays"), 7));
+  const tourDepositPercent = Math.round(toNumber(formData.get("tourDepositPercent"), 30));
+  const taxRate = toNumber(formData.get("taxRate"), 5);
+  const invoicePrefix = toText(formData.get("invoicePrefix")) || "INV";
+  const fieldErrors: Record<string, string> = {};
+
+  if (tourCancellationDays < 0 || tourCancellationDays > 365) {
+    fieldErrors.tourCancellationDays = "Choose a window between 0 and 365 days.";
+  }
+  if (tourDepositPercent < 0 || tourDepositPercent > 100) {
+    fieldErrors.tourDepositPercent = "The deposit must be between 0% and 100%.";
+  }
+  if (taxRate < 0 || taxRate > 100) fieldErrors.taxRate = "Tax must be between 0% and 100%.";
+  if (invoicePrefix.length > 8) fieldErrors.invoicePrefix = "Use 8 characters or fewer.";
+
+  if (Object.keys(fieldErrors).length) return { fieldErrors };
+
+  try {
+    await getRepository().updateSettings({
+      tourDefaultStatus,
+      tourCancellationDays,
+      tourDepositPercent,
+      taxRate: Math.max(0, Math.min(100, taxRate)),
+      invoicePrefix,
+    });
+    revalidatePath("/admin/tours/settings");
+    revalidatePath("/admin/tours");
+    revalidatePath("/admin/settings");
+    revalidatePath("/tours");
+    revalidatePath("/admin");
+    return { message: "Tour settings saved. New tours and tour pages use these defaults." };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not save tour settings." };
   }
 }

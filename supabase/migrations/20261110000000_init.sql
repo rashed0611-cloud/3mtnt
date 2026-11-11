@@ -264,7 +264,12 @@ create table if not exists public.app_settings (
   timezone text not null default 'Asia/Dhaka',
   invoice_prefix text not null default 'INV',
   tax_rate numeric(6, 2) not null default 0,
-  logo_text text not null default '3M'
+  logo_text text not null default '3M',
+  tour_default_status text not null default 'active',
+  tour_cancellation_days integer not null default 7,
+  tour_deposit_percent numeric(5, 2) not null default 30,
+  homepage jsonb not null default '{}'::jsonb,
+  gallery jsonb not null default '[]'::jsonb
 );
 
 -- ---------------------------------------------------------------------------

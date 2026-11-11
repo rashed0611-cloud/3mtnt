@@ -10,6 +10,7 @@ const LINKS = [
   { label: "Tours", href: "/tours" },
   { label: "Hotels", href: "/hotels" },
   { label: "Visas", href: "/visas" },
+  { label: "Flights", href: "/flights" },
   { label: "Hajj & Umrah", href: "/hajj-umrah" },
   { label: "Contact", href: "/contact" },
 ];

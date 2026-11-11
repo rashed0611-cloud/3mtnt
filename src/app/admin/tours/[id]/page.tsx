@@ -28,6 +28,8 @@ export default async function TourDetailPage({
   if (!tour) notFound();
 
   const bookings = db.bookings.filter((booking) => booking.serviceType === "tour" && booking.title === tour.title);
+  const depositPercent = db.settings.tourDepositPercent;
+  const cancellationDays = db.settings.tourCancellationDays;
 
   return (
     <div className="space-y-4">
@@ -143,7 +145,7 @@ export default async function TourDetailPage({
               {[
                 { label: "Adult (twin share)", value: formatMoney(tour.adultPrice, "BDT", 0) },
                 { label: "Child (with bed)", value: formatMoney(tour.childPrice, "BDT", 0) },
-                { label: "Deposit per person", value: formatMoney(Math.round(tour.adultPrice * 0.3), "BDT", 0) },
+                { label: `Deposit per person (${depositPercent}%)`, value: formatMoney(Math.round((tour.adultPrice * depositPercent) / 100), "BDT", 0) },
                 { label: "Agent commission (5%)", value: formatMoney(Math.round(tour.adultPrice * 0.05), "BDT", 0) },
               ].map((row) => (
                 <div key={row.label} className="flex items-center justify-between border-b border-line/70 pb-2 text-[12px] last:border-0 last:pb-0">
@@ -153,7 +155,8 @@ export default async function TourDetailPage({
               ))}
               <div className="rounded-control bg-slate-50 p-3 text-[11px] leading-5 text-slate-500">
                 <Clock className="mb-1 h-3.5 w-3.5 text-slate-400" />
-                Seasonal pricing and departure inventory can be configured in Tour settings.
+                Deposit and cancellation defaults come from Tour settings. Free cancellation is {cancellationDays} days before
+                departure.
               </div>
             </CardContent>
           </Card>

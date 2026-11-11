@@ -15,7 +15,7 @@ interface Day {
 
 const DESTINATIONS = ["Bali", "Maldives", "Switzerland", "Dubai", "Bangkok", "Thailand", "Singapore", "Malaysia", "Turkey", "Japan", "Cox's Bazar", "Sylhet"];
 
-export function TourForm({ tour }: { tour?: Tour }) {
+export function TourForm({ tour, defaultStatus = "active" }: { tour?: Tour; defaultStatus?: Tour["status"] }) {
   const [state, formAction, pending] = useActionState(createTourAction, {} as FormState);
   const errors = state.fieldErrors ?? {};
   const [days, setDays] = useState<Day[]>(
@@ -86,7 +86,7 @@ export function TourForm({ tour }: { tour?: Tour }) {
             <Input name="supplier" defaultValue={tour?.supplier ?? "Own inventory"} />
           </Field>
           <Field label="Status">
-            <Select name="status" defaultValue={tour?.status ?? "active"}>
+            <Select name="status" defaultValue={tour?.status ?? defaultStatus}>
               <option value="active">Published</option>
               <option value="draft">Draft</option>
               <option value="archived">Archived</option>

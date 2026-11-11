@@ -83,6 +83,7 @@ const PATH_MODULES: Record<string, ModuleKey> = {
   "supplier-payments": "finance",
   "profit-loss-report": "finance",
   "finance-settings": "finance",
+  homepage: "settings",
   settings: "settings",
   users: "settings",
   teams: "settings",

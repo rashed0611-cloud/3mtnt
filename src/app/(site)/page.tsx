@@ -29,7 +29,7 @@ const SERVICES = [
   { title: "Hotels", text: "Hand-checked stays from city boutique hotels to beachfront resorts.", href: "/hotels", icon: Hotel, tone: "bg-violet-50 text-violet-600" },
   { title: "Visa services", text: "Document checklists, embassy timing and application tracking.", href: "/visas", icon: FileCheck2, tone: "bg-amber-50 text-amber-600" },
   { title: "Hajj & Umrah", text: "Guided pilgrimage packages with group leaders and full support.", href: "/hajj-umrah", icon: Landmark, tone: "bg-emerald-50 text-emerald-600" },
-  { title: "Flights", text: "Fare planning and ticketing support, with API adapters coming soon.", href: "/contact", icon: Plane, tone: "bg-sky-50 text-sky-600" },
+  { title: "Flights", text: "Fare planning, routing advice and ticketing support from a real travel desk.", href: "/flights", icon: Plane, tone: "bg-sky-50 text-sky-600" },
   { title: "Corporate travel", text: "Policy-friendly itineraries, invoicing and dedicated coordinators.", href: "/contact", icon: Users, tone: "bg-slate-100 text-slate-600" },
 ];
 
@@ -60,6 +60,9 @@ const TESTIMONIALS = [
 
 export default async function HomePage() {
   const db = await getRepository().getDatabase();
+  const settings = db.settings;
+  const home = settings.homepage;
+  const gallery = settings.gallery;
   const tours = db.tours.filter((tour) => tour.status === "active");
   const featured = [...tours].sort((a, b) => Number(b.featured) - Number(a.featured)).slice(0, 3);
 
@@ -86,18 +89,36 @@ export default async function HomePage() {
         <div className="mx-auto grid max-w-7xl gap-10 px-4 pb-10 pt-14 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:px-8 lg:pb-16 lg:pt-20">
           <div className="relative">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-white px-3 py-1 text-[10.5px] font-semibold text-primary shadow-sm">
-              <Sparkles className="h-3 w-3" /> Original journeys, thoughtfully operated
+              <Sparkles className="h-3 w-3" /> {home.eyebrow}
             </span>
             <h1 className="mt-5 max-w-2xl text-[34px] font-bold leading-[1.08] tracking-tight text-ink sm:text-[46px]">
-              Go further. Plan lighter. <span className="text-primary">Travel better.</span>
+              {home.headline} {home.highlight ? <span className="text-primary">{home.highlight}</span> : null}
             </h1>
             <p className="mt-4 max-w-xl text-[13.5px] leading-7 text-slate-600 sm:text-[14.5px]">
-              3M Tours & Travels designs tours, hotel stays, visa files and pilgrimage packages with the same operations team behind
-              every booking — so the plan you approve is the trip you take.
+              {home.subtitle}
             </p>
 
             <div className="mt-6 max-w-2xl">
               <HeroSearch />
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {home.primaryLabel ? (
+                <Link
+                  href={home.primaryHref}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-[12px] font-semibold text-white shadow-sm transition hover:bg-primary-strong"
+                >
+                  {home.primaryLabel} <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              ) : null}
+              {home.secondaryLabel ? (
+                <Link
+                  href={home.secondaryHref}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[12px] font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
+                >
+                  {home.secondaryLabel}
+                </Link>
+              ) : null}
             </div>
 
             <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-[11.5px] text-slate-500">
@@ -201,6 +222,39 @@ export default async function HomePage() {
           {featured.map((tour) => <TourCard key={tour.id} tour={tour} />)}
         </div>
       </section>
+
+      {/* Gallery */}
+      {gallery.length ? (
+        <section className="mx-auto max-w-7xl px-4 pb-14 pt-2 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-primary">Gallery</p>
+              <h2 className="mt-1.5 text-[26px] font-bold tracking-tight text-ink">{home.galleryTitle}</h2>
+              {home.gallerySubtitle ? (
+                <p className="mt-1.5 max-w-xl text-[12.5px] leading-6 text-slate-500">{home.gallerySubtitle}</p>
+              ) : null}
+            </div>
+          </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {gallery.map((image) => (
+              <figure key={image.id} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={image.url}
+                  alt={image.alt || image.caption || "3M Tours & Travels journey"}
+                  loading="lazy"
+                  className="h-56 w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                />
+                {image.caption ? (
+                  <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent px-4 pb-3 pt-10 text-[12px] font-medium text-white">
+                    {image.caption}
+                  </figcaption>
+                ) : null}
+              </figure>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* Services */}
       <section className="border-y border-slate-200 bg-[#f7f9fd]">

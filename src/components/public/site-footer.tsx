@@ -9,6 +9,7 @@ const COLUMNS = [
       { label: "Tour packages", href: "/tours" },
       { label: "Hotels", href: "/hotels" },
       { label: "Visa services", href: "/visas" },
+      { label: "Flights", href: "/flights" },
       { label: "Hajj & Umrah", href: "/hajj-umrah" },
     ],
   },

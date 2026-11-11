@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { buildSeedData } from "@/lib/seed-data";
+import { normalizeSettings } from "@/lib/settings-defaults";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type {
   Activity,
@@ -52,6 +53,19 @@ function now() {
   return new Date().toISOString();
 }
 
+async function retry<T>(task: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return await task();
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts - 1) await new Promise((resolve) => setTimeout(resolve, 200 * (attempt + 1)));
+    }
+  }
+  throw lastError;
+}
+
 function sequence(rows: { code?: string }[]) {
   let max = 0;
   for (const row of rows) {
@@ -63,54 +77,80 @@ function sequence(rows: { code?: string }[]) {
 
 export class SupabaseRepository implements Repository {
   private client = createSupabaseAdminClient();
+  private databaseCache: { at: number; promise: Promise<Database> } | null = null;
 
   private async select<T>(table: string): Promise<T[]> {
-    const { data, error } = await this.client.from(table).select("*");
-    if (error) throw new Error(`${table}: ${error.message}`);
-    return (data ?? []).map((row) => camelize(row) as T);
-  }
-
-  private async insert<T>(table: string, row: Json): Promise<T> {
-    const { data, error } = await this.client.from(table).insert(snakeize(row)).select("*").single();
-    if (error) throw new Error(`${table}: ${error.message}`);
-    return camelize(data) as T;
-  }
-
-  private async upsert<T>(table: string, row: Json, onConflict = "id"): Promise<T> {
-    const { data, error } = await this.client.from(table).upsert(snakeize(row), { onConflict }).select("*").single();
-    if (error) throw new Error(`${table}: ${error.message}`);
-    return camelize(data) as T;
-  }
-
-  private async log(action: string, module: string, description: string, severity: Activity["severity"] = "info") {
-    await this.client.from("activities").insert({
-      id: `act_${randomUUID()}`,
-      actor: "Administrator",
-      action,
-      module,
-      severity,
-      description,
-      created_at: now(),
+    return retry(async () => {
+      const { data, error } = await this.client.from(table).select("*");
+      if (error) throw new Error(`${table}: ${error.message}`);
+      return (data ?? []).map((row) => camelize(row) as T);
     });
   }
 
-  async getDatabase(): Promise<Database> {
-    const [customers, tours, hotels, visas, hajjPackages, bookings, invoices, leads, tasks, activities, suppliers, agents, settings] =
-      await Promise.all([
-        this.select<Customer>("customers"),
-        this.select<Tour>("tours"),
-        this.select<Hotel>("hotels"),
-        this.select<VisaPackage>("visa_packages"),
-        this.select<HajjPackage>("hajj_packages"),
-        this.select<Booking>("bookings"),
-        this.select<Invoice>("invoices"),
-        this.select<Lead>("leads"),
-        this.select<Task>("tasks"),
-        this.select<Activity>("activities"),
-        this.select<Supplier>("suppliers"),
-        this.select<Agent>("agents"),
-        this.getSettings(),
-      ]);
+  private async insert<T>(table: string, row: Json): Promise<T> {
+    return retry(async () => {
+      const { data, error } = await this.client.from(table).insert(snakeize(row)).select("*").single();
+      if (error) throw new Error(`${table}: ${error.message}`);
+      return camelize(data) as T;
+    });
+  }
+
+  private async upsert<T>(table: string, row: Json, onConflict = "id"): Promise<T> {
+    return retry(async () => {
+      const { data, error } = await this.client.from(table).upsert(snakeize(row), { onConflict }).select("*").single();
+      if (error) throw new Error(`${table}: ${error.message}`);
+      return camelize(data) as T;
+    });
+  }
+
+  private async log(action: string, module: string, description: string, severity: Activity["severity"] = "info") {
+    await retry(async () => {
+      await this.client.from("activities").insert({
+        id: `act_${randomUUID()}`,
+        actor: "Administrator",
+        action,
+        module,
+        severity,
+        description,
+        createdAt: now(),
+      });
+    });
+  }
+
+  getDatabase(): Promise<Database> {
+    // Layouts and pages often request the same snapshot within one render.
+    // A short-lived cache avoids duplicate query bursts against Supabase.
+    const now = Date.now();
+    if (this.databaseCache && now - this.databaseCache.at < 2000) {
+      return this.databaseCache.promise;
+    }
+    const promise = this.loadDatabase();
+    this.databaseCache = { at: now, promise };
+    return promise;
+  }
+
+  private async loadDatabase(): Promise<Database> {
+    // Small waves keep the number of concurrent connections predictable while
+    // still loading the whole snapshot quickly.
+    const [customers, tours, hotels, settings] = await Promise.all([
+      this.select<Customer>("customers"),
+      this.select<Tour>("tours"),
+      this.select<Hotel>("hotels"),
+      this.getSettings(),
+    ]);
+    const [visas, hajjPackages, bookings, invoices] = await Promise.all([
+      this.select<VisaPackage>("visa_packages"),
+      this.select<HajjPackage>("hajj_packages"),
+      this.select<Booking>("bookings"),
+      this.select<Invoice>("invoices"),
+    ]);
+    const [leads, tasks, activities, suppliers] = await Promise.all([
+      this.select<Lead>("leads"),
+      this.select<Task>("tasks"),
+      this.select<Activity>("activities"),
+      this.select<Supplier>("suppliers"),
+    ]);
+    const [agents] = await Promise.all([this.select<Agent>("agents")]);
     return { customers, tours, hotels, visas, hajjPackages, bookings, invoices, leads, tasks, activities, suppliers, agents, settings };
   }
 
@@ -482,17 +522,20 @@ export class SupabaseRepository implements Repository {
   }
 
   async getSettings() {
-    const { data, error } = await this.client.from("app_settings").select("*").eq("id", 1).maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!data) return buildSeedData().settings;
-    return camelize(data) as AppSettings;
+    return retry(async () => {
+      const { data, error } = await this.client.from("app_settings").select("*").eq("id", 1).maybeSingle();
+      if (error) throw new Error(error.message);
+      if (!data) return normalizeSettings(buildSeedData().settings);
+      return normalizeSettings(camelize(data) as Partial<AppSettings>);
+    });
   }
 
   async updateSettings(input: Partial<AppSettings>) {
+    this.databaseCache = null;
     const current = await this.getSettings();
-    const settings = { ...current, ...input };
+    const settings = normalizeSettings({ ...current, ...input });
     const saved = await this.upsert<AppSettings>("app_settings", { id: 1, ...settings } as unknown as Json);
     await this.log("Settings Updated", "Settings", "General business settings were updated");
-    return saved;
+    return normalizeSettings(saved);
   }
 }

@@ -4,6 +4,9 @@ import { SiteFooter } from "@/components/public/site-footer";
 import { getSessionUser } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
 
+// The public site reads live workspace settings, tours and gallery content.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: {
     default: "3M Tours & Travels — Journeys worth remembering",

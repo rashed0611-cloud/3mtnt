@@ -4,12 +4,14 @@ import { ArrowLeft } from "lucide-react";
 import { TourForm } from "@/components/forms/tour-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
-import { requireUser } from "@/lib/auth";
+import { requireModuleAccess } from "@/lib/auth";
+import { getRepository } from "@/lib/db";
 
 export const metadata: Metadata = { title: "Add tour" };
 
 export default async function NewTourPage() {
-  await requireUser();
+  await requireModuleAccess("tours", "write");
+  const settings = await getRepository().getSettings();
   return (
     <div className="mx-auto max-w-5xl space-y-4">
       <PageHeader
@@ -24,7 +26,7 @@ export default async function NewTourPage() {
       />
       <Card>
         <CardContent>
-          <TourForm />
+          <TourForm defaultStatus={settings.tourDefaultStatus} />
         </CardContent>
       </Card>
     </div>

@@ -181,6 +181,16 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
                 <div className="flex justify-between"><dt className="text-slate-500">Duration</dt><dd className="font-medium text-ink">{tour.durationDays} days</dd></div>
                 <div className="flex justify-between"><dt className="text-slate-500">Availability</dt><dd className={isFull ? "font-medium text-red-600" : "font-medium text-emerald-600"}>{isFull ? "Waitlist" : "Open for booking"}</dd></div>
                 <div className="flex justify-between"><dt className="text-slate-500">Tour code</dt><dd className="font-mono text-[10.5px] font-medium text-ink">{tour.code}</dd></div>
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">Deposit</dt>
+                  <dd className="font-medium text-ink">
+                    {formatMoney(Math.round((tour.adultPrice * db.settings.tourDepositPercent) / 100), "BDT", 0)} per adult
+                  </dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">Free cancellation</dt>
+                  <dd className="font-medium text-ink">{db.settings.tourCancellationDays} days before departure</dd>
+                </div>
               </dl>
 
               <div className="mt-4 space-y-2">

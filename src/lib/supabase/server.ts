@@ -2,6 +2,16 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
+/**
+ * Supabase requests occasionally stall on flaky networks. A hard timeout keeps
+ * server actions and page renders responsive; the repository retries failures.
+ */
+const REQUEST_TIMEOUT_MS = 12_000;
+
+function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit) {
+  return fetch(input, { ...init, signal: init?.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+}
+
 export function supabaseUrl() {
   return process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 }
@@ -24,6 +34,7 @@ export async function createSupabaseServerClient() {
   }
   const cookieStore = await cookies();
   return createServerClient(supabaseUrl(), supabaseAnonKey(), {
+    global: { fetch: fetchWithTimeout },
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -48,6 +59,7 @@ export function createSupabaseAdminClient() {
     throw new Error("Supabase is not configured.");
   }
   return createClient(supabaseUrl(), supabaseServiceKey() || supabaseAnonKey(), {
+    global: { fetch: fetchWithTimeout },
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

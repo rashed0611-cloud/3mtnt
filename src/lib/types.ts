@@ -236,6 +236,26 @@ export interface Agent {
   status: "active" | "inactive";
 }
 
+export interface GalleryImage {
+  id: string;
+  url: string;
+  caption: string;
+  alt: string;
+}
+
+export interface HomepageContent {
+  eyebrow: string;
+  headline: string;
+  highlight: string;
+  subtitle: string;
+  primaryLabel: string;
+  primaryHref: string;
+  secondaryLabel: string;
+  secondaryHref: string;
+  galleryTitle: string;
+  gallerySubtitle: string;
+}
+
 export interface AppSettings {
   siteName: string;
   tagline: string;
@@ -248,6 +268,11 @@ export interface AppSettings {
   invoicePrefix: string;
   taxRate: number;
   logoText: string;
+  tourDefaultStatus: "active" | "draft";
+  tourCancellationDays: number;
+  tourDepositPercent: number;
+  homepage: HomepageContent;
+  gallery: GalleryImage[];
 }
 
 export interface Database {

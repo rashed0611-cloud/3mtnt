@@ -15,6 +15,7 @@ import type {
   Tour,
   VisaPackage,
 } from "@/lib/types";
+import { DEFAULT_APP_SETTINGS } from "@/lib/settings-defaults";
 
 const DAY = 86_400_000;
 
@@ -586,18 +587,6 @@ export function buildSeedData(): Database {
     activities,
     suppliers,
     agents,
-    settings: {
-      siteName: "3M Tours & Travels ERP",
-      tagline: "Travel operations, without the spreadsheets.",
-      legalName: "3M Tours & Travels Ltd.",
-      email: "hello@3mtnt.com",
-      phone: "+880 1711 000 000",
-      address: "House 12, Road 7, Banani, Dhaka 1213, Bangladesh",
-      defaultCurrency: "BDT",
-      timezone: "Asia/Dhaka",
-      invoicePrefix: "INV",
-      taxRate: 5,
-      logoText: "3M",
-    },
+    settings: { ...DEFAULT_APP_SETTINGS },
   };
 }

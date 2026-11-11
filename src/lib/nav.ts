@@ -310,6 +310,7 @@ export const navigation: NavSection[] = [
         label: "Content Management",
         icon: FileText,
         items: [
+          { label: "Front Page & Gallery", href: "/admin/homepage" },
           { label: "Pages", href: "/admin/pages" },
           { label: "Details Templates", href: "/admin/details-templates" },
           { label: "Menu Builder", href: "/admin/menu" },

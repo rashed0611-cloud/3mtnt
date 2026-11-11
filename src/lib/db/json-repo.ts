@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getDb, saveDb } from "@/lib/db/json-store";
+import { normalizeSettings } from "@/lib/settings-defaults";
 import type {
   Activity,
   Agent,
@@ -473,12 +474,13 @@ export class JsonRepository implements Repository {
 
   async getSettings() {
     const db = await getDb();
+    db.settings = normalizeSettings(db.settings);
     return db.settings;
   }
 
   async updateSettings(input: Partial<AppSettings>) {
     const db = await getDb();
-    db.settings = { ...db.settings, ...input };
+    db.settings = normalizeSettings({ ...db.settings, ...input });
     logActivity(db, "Settings Updated", "Settings", "General business settings were updated");
     await saveDb(db);
     return db.settings;
