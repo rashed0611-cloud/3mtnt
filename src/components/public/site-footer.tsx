@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Compass, Mail, MapPin, Phone } from "lucide-react";
+import { Compass, Facebook, Instagram, Linkedin, Mail, MapPin, MessageCircle, Phone, Youtube } from "lucide-react";
 import type { AppSettings } from "@/lib/types";
 
 const COLUMNS = [
@@ -34,18 +34,35 @@ const COLUMNS = [
 ];
 
 export function SiteFooter({ settings }: { settings: AppSettings }) {
+  const { appearance } = settings;
+  const brandName = settings.siteName.replace(/\s*ERP\s*$/i, "");
+  const socials = [
+    { label: "Facebook", href: appearance.brand.facebook, icon: Facebook },
+    { label: "Instagram", href: appearance.brand.instagram, icon: Instagram },
+    { label: "YouTube", href: appearance.brand.youtube, icon: Youtube },
+    { label: "LinkedIn", href: appearance.brand.linkedin, icon: Linkedin },
+    { label: "WhatsApp", href: appearance.brand.whatsapp, icon: MessageCircle },
+  ].filter((social) => social.href);
+
   return (
-    <footer className="mt-16 bg-[#0d1b2e] text-slate-300">
+    <footer className="mt-16 text-slate-300" style={{ background: "var(--footer-bg)" }}>
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_repeat(3,1fr)]">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white">
-                <Compass className="h-5 w-5" />
-              </span>
+              {appearance.brand.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={appearance.brand.logoUrl} alt={brandName} className="h-10 w-auto max-w-[170px] object-contain" />
+              ) : (
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white">
+                  {settings.logoText ? <span className="text-[11px] font-bold">{settings.logoText}</span> : <Compass className="h-5 w-5" />}
+                </span>
+              )}
               <div>
-                <p className="text-[15px] font-bold tracking-tight text-white">3M Tours & Travels</p>
-                <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-400">Go further, plan lighter</p>
+                <p className="text-[15px] font-bold tracking-tight text-white">{brandName}</p>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                  {appearance.brand.logoTagline || "Go further, plan lighter"}
+                </p>
               </div>
             </div>
             <p className="mt-4 max-w-sm text-[12px] leading-6 text-slate-400">
@@ -57,6 +74,22 @@ export function SiteFooter({ settings }: { settings: AppSettings }) {
               <p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-slate-500" /> {settings.email}</p>
               <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-slate-500" /> {settings.address}</p>
             </div>
+            {socials.length ? (
+              <div className="mt-4 flex items-center gap-2">
+                {socials.map(({ label, href, icon: Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label={label}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                  </a>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           {COLUMNS.map((column) => (

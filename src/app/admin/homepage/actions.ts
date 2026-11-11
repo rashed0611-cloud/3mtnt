@@ -4,8 +4,10 @@ import crypto from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireModuleAccess } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
-import { uploadGalleryImage } from "@/lib/gallery-upload";
-import type { GalleryImage, HomepageContent } from "@/lib/types";
+import { uploadSiteImage, type SiteMediaFolder } from "@/lib/gallery-upload";
+import { DEFAULT_APPEARANCE } from "@/lib/settings-defaults";
+import type { GalleryImage, HomepageContent, SiteAnnouncement, SiteAppearance, SiteSections } from "@/lib/types";
+import { isHexColor } from "@/lib/theme";
 import { toText } from "@/lib/utils";
 
 export interface HomepageState {
@@ -21,6 +23,27 @@ function safeLink(value: string, fallback: string) {
   return fallback;
 }
 
+function safeMedia(value: string) {
+  const url = value.trim();
+  if (url.startsWith("/") && !url.startsWith("//")) return url;
+  if (/^https?:\/\//i.test(url)) return url;
+  return "";
+}
+
+function bool(formData: FormData, name: string) {
+  return formData.get(name) === "on" || formData.get(name) === "true" || formData.get(name) === "1";
+}
+
+function clampedNumber(value: FormDataEntryValue | null, min: number, max: number, fallback: number) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.round(Math.min(max, Math.max(min, number)));
+}
+
+function isFile(value: FormDataEntryValue | null): value is File {
+  return value instanceof File && value.size > 0;
+}
+
 export async function updateHomepageAction(_prev: HomepageState, formData: FormData): Promise<HomepageState> {
   await requireModuleAccess("settings", "write");
 
@@ -30,21 +53,34 @@ export async function updateHomepageAction(_prev: HomepageState, formData: FormD
   const subtitle = toText(formData.get("subtitle"));
   const galleryTitle = toText(formData.get("galleryTitle"));
   const gallerySubtitle = toText(formData.get("gallerySubtitle"));
-  const primaryLabel = toText(formData.get("primaryLabel")) || "Browse tours";
-  const secondaryLabel = toText(formData.get("secondaryLabel")) || "Talk to a specialist";
 
   const fieldErrors: Record<string, string> = {};
   if (headline.length < 3) fieldErrors.headline = "Add a headline of at least 3 characters.";
   if (subtitle.length < 10) fieldErrors.subtitle = "Add a short introduction for visitors.";
+
+  const colorFields: [string, string][] = [
+    ["primary", "Brand colour"],
+    ["accent", "Accent colour"],
+    ["page", "Page background"],
+    ["text", "Text colour"],
+    ["footer", "Footer background"],
+  ];
+  for (const [name, label] of colorFields) {
+    if (!isHexColor(toText(formData.get(`color_${name}`)))) {
+      fieldErrors[`color_${name}`] = `${label} must be a hex value such as #0b74de.`;
+    }
+  }
+
+  if (Object.keys(fieldErrors).length) return { fieldErrors };
 
   const homepage: HomepageContent = {
     eyebrow,
     headline,
     highlight,
     subtitle,
-    primaryLabel,
+    primaryLabel: toText(formData.get("primaryLabel")) || "Browse tours",
     primaryHref: safeLink(toText(formData.get("primaryHref")), "/tours"),
-    secondaryLabel,
+    secondaryLabel: toText(formData.get("secondaryLabel")) || "Talk to a specialist",
     secondaryHref: safeLink(toText(formData.get("secondaryHref")), "/contact"),
     galleryTitle: galleryTitle || "Moments from the road",
     gallerySubtitle,
@@ -64,29 +100,136 @@ export async function updateHomepageAction(_prev: HomepageState, formData: FormD
     }))
     .filter((image) => image.url.length > 0);
 
-  const files = formData
-    .getAll("galleryFiles")
-    .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+  const sections: SiteSections = {
+    featuredTours: bool(formData, "section_featuredTours"),
+    services: bool(formData, "section_services"),
+    destinations: bool(formData, "section_destinations"),
+    gallery: bool(formData, "section_gallery"),
+    pilgrimage: bool(formData, "section_pilgrimage"),
+    testimonials: bool(formData, "section_testimonials"),
+    stats: bool(formData, "section_stats"),
+    cta: bool(formData, "section_cta"),
+  };
 
-  if (Object.keys(fieldErrors).length) return { fieldErrors };
+  const tone = toText(formData.get("announcementTone"));
+  const announcement: SiteAnnouncement = {
+    enabled: bool(formData, "announcementEnabled"),
+    text: toText(formData.get("announcementText")).slice(0, 160),
+    linkLabel: toText(formData.get("announcementLinkLabel")).slice(0, 40),
+    linkHref: safeLink(toText(formData.get("announcementLinkHref")), "/tours"),
+    tone: tone === "dark" || tone === "light" ? tone : "brand",
+  };
+
+  const appearance: SiteAppearance = {
+    ...DEFAULT_APPEARANCE,
+    brand: {
+      ...DEFAULT_APPEARANCE.brand,
+      logoUrl: safeMedia(toText(formData.get("logoUrl"))),
+      faviconUrl: safeMedia(toText(formData.get("faviconUrl"))),
+      logoTagline: toText(formData.get("logoTagline")).slice(0, 40),
+      facebook: safeLink(toText(formData.get("facebook")), ""),
+      instagram: safeLink(toText(formData.get("instagram")), ""),
+      youtube: safeLink(toText(formData.get("youtube")), ""),
+      linkedin: safeLink(toText(formData.get("linkedin")), ""),
+      whatsapp: safeLink(toText(formData.get("whatsapp")), ""),
+    },
+    colors: {
+      primary: toText(formData.get("color_primary")),
+      accent: toText(formData.get("color_accent")),
+      page: toText(formData.get("color_page")),
+      text: toText(formData.get("color_text")),
+      footer: toText(formData.get("color_footer")),
+    },
+    typography: {
+      headingFont: toText(formData.get("headingFont")),
+      bodyFont: toText(formData.get("bodyFont")),
+      headingWeight: clampedNumber(formData.get("headingWeight"), 500, 800, 700),
+      radius: clampedNumber(formData.get("radius"), 0, 28, 16),
+    },
+    banner: {
+      imageUrl: safeMedia(toText(formData.get("bannerUrl"))),
+      overlay: clampedNumber(formData.get("bannerOverlay"), 0, 85, 55),
+      align: toText(formData.get("bannerAlign")) === "center" ? "center" : "left",
+      height:
+        toText(formData.get("bannerHeight")) === "compact"
+          ? "compact"
+          : toText(formData.get("bannerHeight")) === "tall"
+            ? "tall"
+            : "standard",
+      showSearch: bool(formData, "bannerShowSearch"),
+    },
+    announcement,
+    sections,
+    seo: {
+      title: toText(formData.get("seoTitle")).slice(0, 70),
+      description: toText(formData.get("seoDescription")).slice(0, 180),
+      ogImageUrl: safeMedia(toText(formData.get("ogImageUrl"))),
+    },
+  };
+
+  const fileInputs: { name: string; folder: SiteMediaFolder; apply: (url: string) => void }[] = [
+    {
+      name: "logoFile",
+      folder: "brand",
+      apply: (url) => {
+        appearance.brand.logoUrl = url;
+      },
+    },
+    {
+      name: "faviconFile",
+      folder: "brand",
+      apply: (url) => {
+        appearance.brand.faviconUrl = url;
+      },
+    },
+    {
+      name: "bannerFile",
+      folder: "banner",
+      apply: (url) => {
+        appearance.banner.imageUrl = url;
+      },
+    },
+    {
+      name: "ogImageFile",
+      folder: "seo",
+      apply: (url) => {
+        appearance.seo.ogImageUrl = url;
+      },
+    },
+  ];
 
   try {
+    let uploads = 0;
+    for (const input of fileInputs) {
+      const file = formData.get(input.name);
+      if (isFile(file)) {
+        input.apply(await uploadSiteImage(file, input.folder));
+        uploads += 1;
+      }
+    }
+
+    const files = formData
+      .getAll("galleryFiles")
+      .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+
     for (const file of files) {
-      const url = await uploadGalleryImage(file);
+      const url = await uploadSiteImage(file, "gallery");
       gallery.push({ id: crypto.randomUUID(), url, caption: "", alt: "" });
     }
 
-    await getRepository().updateSettings({ homepage, gallery });
-    revalidatePath("/");
+    await getRepository().updateSettings({ homepage, gallery, appearance });
+    revalidatePath("/", "layout");
     revalidatePath("/admin/homepage");
     revalidatePath("/admin");
+
+    const uploaded = uploads + files.length;
     return {
       message:
-        files.length > 0
-          ? `Front page saved and ${files.length} image${files.length === 1 ? "" : "s"} uploaded.`
-          : "Front page saved. The public site is updated.",
+        uploaded > 0
+          ? `Website saved and ${uploaded} image${uploaded === 1 ? "" : "s"} uploaded. The public site is updated.`
+          : "Website saved. The public site is updated.",
     };
   } catch (error) {
-    return { error: error instanceof Error ? error.message : "Could not save the front page." };
+    return { error: error instanceof Error ? error.message : "Could not save the website." };
   }
 }

@@ -159,7 +159,7 @@ export default async function FlightsPage() {
         </div>
       </section>
 
-      <section className="border-y border-slate-200 bg-[#f7f9fd]">
+      <section className="border-y border-slate-200 bg-page">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div>

@@ -1,4 +1,6 @@
-import type { AppSettings, GalleryImage, HomepageContent } from "@/lib/types";
+import { DEFAULT_BODY_FONT, DEFAULT_HEADING_FONT, isFontKey } from "@/lib/fonts";
+import { normalizeHex } from "@/lib/theme";
+import type { AppSettings, GalleryImage, HomepageContent, SiteAppearance, SiteSections } from "@/lib/types";
 
 export const DEFAULT_HOMEPAGE: HomepageContent = {
   eyebrow: "Original journeys, thoughtfully operated",
@@ -12,6 +14,64 @@ export const DEFAULT_HOMEPAGE: HomepageContent = {
   secondaryHref: "/contact",
   galleryTitle: "Moments from the road",
   gallerySubtitle: "A look at the places, stays and people behind recent 3M journeys.",
+};
+
+export const DEFAULT_SECTIONS: SiteSections = {
+  featuredTours: true,
+  services: true,
+  destinations: true,
+  gallery: true,
+  pilgrimage: true,
+  testimonials: true,
+  stats: true,
+  cta: true,
+};
+
+export const DEFAULT_APPEARANCE: SiteAppearance = {
+  brand: {
+    logoUrl: "",
+    faviconUrl: "",
+    logoTagline: "& Travels",
+    facebook: "",
+    instagram: "",
+    youtube: "",
+    linkedin: "",
+    whatsapp: "",
+  },
+  colors: {
+    primary: "#0b74de",
+    accent: "#06b6d4",
+    page: "#f5f7fb",
+    text: "#172033",
+    footer: "#0d1b2e",
+  },
+  typography: {
+    headingFont: DEFAULT_HEADING_FONT,
+    bodyFont: DEFAULT_BODY_FONT,
+    headingWeight: 700,
+    radius: 16,
+  },
+  banner: {
+    imageUrl: "",
+    overlay: 55,
+    align: "left",
+    height: "standard",
+    showSearch: true,
+  },
+  announcement: {
+    enabled: false,
+    text: "Book your winter escape — early-bird fares are open now.",
+    linkLabel: "View tours",
+    linkHref: "/tours",
+    tone: "brand",
+  },
+  sections: DEFAULT_SECTIONS,
+  seo: {
+    title: "3M Tours & Travels — Journeys worth remembering",
+    description:
+      "Original tours, hotels, visa services and Hajj & Umrah packages from 3M Tours & Travels. Plan your next journey with a real operations team behind every booking.",
+    ogImageUrl: "",
+  },
 };
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -31,6 +91,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   tourDepositPercent: 30,
   homepage: DEFAULT_HOMEPAGE,
   gallery: [],
+  appearance: DEFAULT_APPEARANCE,
 };
 
 function clamp(value: unknown, min: number, max: number, fallback: number) {
@@ -59,6 +120,92 @@ export function normalizeGallery(value: unknown): GalleryImage[] {
     .filter((item) => item.url.length > 0);
 }
 
+function bool(value: unknown, fallback: boolean) {
+  return typeof value === "boolean" ? value : fallback;
+}
+
+function safeLink(value: unknown, fallback: string) {
+  const link = String(value ?? "").trim();
+  if (link.startsWith("/") && !link.startsWith("//")) return link;
+  if (/^https?:\/\//i.test(link)) return link;
+  return fallback;
+}
+
+function safeImage(value: unknown) {
+  return safeLink(value, "");
+}
+
+function weight(value: unknown) {
+  const number = Math.round(clamp(value, 500, 900, DEFAULT_APPEARANCE.typography.headingWeight) / 100) * 100;
+  return Math.min(800, Math.max(500, number));
+}
+
+export function normalizeAppearance(value: Partial<SiteAppearance> | null | undefined): SiteAppearance {
+  const source = value && typeof value === "object" ? value : {};
+  const brand = { ...DEFAULT_APPEARANCE.brand, ...(source.brand ?? {}) };
+  const colors = { ...DEFAULT_APPEARANCE.colors, ...(source.colors ?? {}) };
+  const typography = { ...DEFAULT_APPEARANCE.typography, ...(source.typography ?? {}) };
+  const banner = { ...DEFAULT_APPEARANCE.banner, ...(source.banner ?? {}) };
+  const announcement = { ...DEFAULT_APPEARANCE.announcement, ...(source.announcement ?? {}) };
+  const sections = { ...DEFAULT_APPEARANCE.sections, ...(source.sections ?? {}) };
+  const seo = { ...DEFAULT_APPEARANCE.seo, ...(source.seo ?? {}) };
+
+  return {
+    brand: {
+      logoUrl: safeImage(brand.logoUrl),
+      faviconUrl: safeImage(brand.faviconUrl),
+      logoTagline: String(brand.logoTagline ?? "").slice(0, 40),
+      facebook: safeLink(brand.facebook, ""),
+      instagram: safeLink(brand.instagram, ""),
+      youtube: safeLink(brand.youtube, ""),
+      linkedin: safeLink(brand.linkedin, ""),
+      whatsapp: safeLink(brand.whatsapp, ""),
+    },
+    colors: {
+      primary: normalizeHex(colors.primary, DEFAULT_APPEARANCE.colors.primary),
+      accent: normalizeHex(colors.accent, DEFAULT_APPEARANCE.colors.accent),
+      page: normalizeHex(colors.page, DEFAULT_APPEARANCE.colors.page),
+      text: normalizeHex(colors.text, DEFAULT_APPEARANCE.colors.text),
+      footer: normalizeHex(colors.footer, DEFAULT_APPEARANCE.colors.footer),
+    },
+    typography: {
+      headingFont: isFontKey(typography.headingFont) ? typography.headingFont : DEFAULT_APPEARANCE.typography.headingFont,
+      bodyFont: isFontKey(typography.bodyFont) ? typography.bodyFont : DEFAULT_APPEARANCE.typography.bodyFont,
+      headingWeight: weight(typography.headingWeight),
+      radius: Math.round(clamp(typography.radius, 0, 28, DEFAULT_APPEARANCE.typography.radius)),
+    },
+    banner: {
+      imageUrl: safeImage(banner.imageUrl),
+      overlay: Math.round(clamp(banner.overlay, 0, 85, DEFAULT_APPEARANCE.banner.overlay)),
+      align: banner.align === "center" ? "center" : "left",
+      height: banner.height === "compact" || banner.height === "tall" ? banner.height : "standard",
+      showSearch: bool(banner.showSearch, DEFAULT_APPEARANCE.banner.showSearch),
+    },
+    announcement: {
+      enabled: bool(announcement.enabled, false),
+      text: String(announcement.text ?? "").slice(0, 160),
+      linkLabel: String(announcement.linkLabel ?? "").slice(0, 40),
+      linkHref: safeLink(announcement.linkHref, DEFAULT_APPEARANCE.announcement.linkHref),
+      tone: announcement.tone === "dark" || announcement.tone === "light" ? announcement.tone : "brand",
+    },
+    sections: {
+      featuredTours: bool(sections.featuredTours, true),
+      services: bool(sections.services, true),
+      destinations: bool(sections.destinations, true),
+      gallery: bool(sections.gallery, true),
+      pilgrimage: bool(sections.pilgrimage, true),
+      testimonials: bool(sections.testimonials, true),
+      stats: bool(sections.stats, true),
+      cta: bool(sections.cta, true),
+    },
+    seo: {
+      title: String(seo.title ?? "").slice(0, 70),
+      description: String(seo.description ?? "").slice(0, 180),
+      ogImageUrl: safeImage(seo.ogImageUrl),
+    },
+  };
+}
+
 export function normalizeSettings(value: Partial<AppSettings> | null | undefined): AppSettings {
   const settings = value ?? {};
   return {
@@ -69,5 +216,6 @@ export function normalizeSettings(value: Partial<AppSettings> | null | undefined
     tourDepositPercent: Math.round(clamp(settings.tourDepositPercent, 0, 100, DEFAULT_APP_SETTINGS.tourDepositPercent)),
     homepage: normalizeHomepage(settings.homepage),
     gallery: normalizeGallery(settings.gallery),
+    appearance: normalizeAppearance(settings.appearance),
   };
 }

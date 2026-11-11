@@ -67,6 +67,13 @@ export function verifySessionToken(token: string | undefined | null): SessionUse
 }
 
 export async function getSessionUser(): Promise<SessionUser | null> {
+  // Prefer the signed, http-only workspace cookie. It is verified locally, so a
+  // flaky network or an unavailable Supabase auth endpoint never signs a user
+  // out mid-session. Supabase remains the source of truth at sign-in time.
+  const store = await cookies();
+  const cached = verifySessionToken(store.get(SESSION_COOKIE)?.value);
+  if (cached) return cached;
+
   if (isSupabaseConfigured()) {
     try {
       const supabase = await createSupabaseServerClient();
@@ -84,8 +91,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       return null;
     }
   }
-  const store = await cookies();
-  return verifySessionToken(store.get(SESSION_COOKIE)?.value);
+  return null;
 }
 
 export async function requireUser(): Promise<SessionUser> {

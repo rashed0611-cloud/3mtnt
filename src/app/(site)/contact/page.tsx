@@ -38,7 +38,7 @@ export default async function ContactPage({
 
   return (
     <>
-      <section className="border-b border-slate-200 bg-gradient-to-b from-[#eef5ff] to-white">
+      <section className="border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary">Home</Link>
@@ -118,7 +118,7 @@ export default async function ContactPage({
               </ol>
             </div>
 
-            <div className="rounded-2xl bg-gradient-to-br from-primary to-[#075bb0] p-5 text-white">
+            <div className="rounded-2xl bg-gradient-to-br from-primary to-primary-strong p-5 text-white">
               <MessageCircle className="h-5 w-5 text-white/70" />
               <p className="mt-2 text-[13px] font-semibold">Already have a booking?</p>
               <p className="mt-1 text-[11px] leading-5 text-white/80">Our operations desk can help with dates, documents and balances for an existing trip.</p>

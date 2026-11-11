@@ -22,7 +22,7 @@ import {
 import { HeroSearch } from "@/components/public/hero-search";
 import { DestinationTile, TourCard } from "@/components/public/tour-card";
 import { getRepository } from "@/lib/db";
-import { formatMoney } from "@/lib/utils";
+import { cn, formatMoney } from "@/lib/utils";
 
 const SERVICES = [
   { title: "Tour packages", text: "Curated group and private journeys across Asia, the Gulf and Europe.", href: "/tours", icon: Globe2, tone: "bg-blue-50 text-blue-600" },
@@ -63,6 +63,16 @@ export default async function HomePage() {
   const settings = db.settings;
   const home = settings.homepage;
   const gallery = settings.gallery;
+  const appearance = settings.appearance;
+  const sections = appearance.sections;
+  const banner = appearance.banner;
+  const hasBanner = Boolean(banner.imageUrl);
+  const heroPadding =
+    banner.height === "compact"
+      ? "pb-8 pt-10 lg:pb-10 lg:pt-12"
+      : banner.height === "tall"
+        ? "pb-14 pt-20 lg:pb-24 lg:pt-32"
+        : "pb-10 pt-14 lg:pb-16 lg:pt-20";
   const tours = db.tours.filter((tour) => tour.status === "active");
   const featured = [...tours].sort((a, b) => Number(b.featured) - Number(a.featured)).slice(0, 3);
 
@@ -83,26 +93,62 @@ export default async function HomePage() {
   return (
     <>
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-[#eef5ff] via-[#f7faff] to-white">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
-        <div className="pointer-events-none absolute -left-24 top-40 h-72 w-72 rounded-full bg-cyan-200/40 blur-3xl" />
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 pb-10 pt-14 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:px-8 lg:pb-16 lg:pt-20">
-          <div className="relative">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-white px-3 py-1 text-[10.5px] font-semibold text-primary shadow-sm">
+      <section
+        className={cn(
+          "relative overflow-hidden border-b border-slate-200",
+          hasBanner ? "text-white" : "bg-gradient-to-b from-primary/10 via-page to-white",
+        )}
+      >
+        {hasBanner ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={banner.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0" style={{ background: `rgba(15, 23, 42, ${banner.overlay / 100})` }} />
+          </>
+        ) : (
+          <>
+            <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+            <div className="pointer-events-none absolute -left-24 top-40 h-72 w-72 rounded-full bg-accent/25 blur-3xl" />
+          </>
+        )}
+        <div
+          className={cn(
+            "relative mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:px-8",
+            heroPadding,
+            banner.align === "center" ? "max-w-4xl text-center lg:grid-cols-1" : "lg:grid-cols-[1.15fr_0.85fr] lg:items-center",
+          )}
+        >
+          <div className={cn("relative", banner.align === "center" ? "mx-auto max-w-2xl" : "")}>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10.5px] font-semibold shadow-sm",
+                hasBanner ? "border-white/30 bg-white/10 text-white backdrop-blur" : "border-primary/15 bg-white text-primary",
+              )}
+            >
               <Sparkles className="h-3 w-3" /> {home.eyebrow}
             </span>
-            <h1 className="mt-5 max-w-2xl text-[34px] font-bold leading-[1.08] tracking-tight text-ink sm:text-[46px]">
-              {home.headline} {home.highlight ? <span className="text-primary">{home.highlight}</span> : null}
+            <h1
+              className={cn(
+                "mt-5 max-w-2xl text-[34px] leading-[1.08] tracking-tight sm:text-[46px]",
+                hasBanner ? "text-white" : "text-ink",
+              )}
+            >
+              {home.headline}{" "}
+              {home.highlight ? (
+                <span className={hasBanner ? "text-white/85" : "text-primary"}>{home.highlight}</span>
+              ) : null}
             </h1>
-            <p className="mt-4 max-w-xl text-[13.5px] leading-7 text-slate-600 sm:text-[14.5px]">
+            <p className={cn("mt-4 max-w-xl text-[13.5px] leading-7 sm:text-[14.5px]", hasBanner ? "text-white/85" : "text-slate-600")}>
               {home.subtitle}
             </p>
 
-            <div className="mt-6 max-w-2xl">
-              <HeroSearch />
-            </div>
+            {banner.showSearch ? (
+              <div className={cn("mt-6 max-w-2xl", banner.align === "center" ? "mx-auto" : "")}>
+                <HeroSearch />
+              </div>
+            ) : null}
 
-            <div className="mt-4 flex flex-wrap items-center gap-2">
+            <div className={cn("mt-4 flex flex-wrap items-center gap-2", banner.align === "center" ? "justify-center" : "")}>
               {home.primaryLabel ? (
                 <Link
                   href={home.primaryHref}
@@ -114,98 +160,114 @@ export default async function HomePage() {
               {home.secondaryLabel ? (
                 <Link
                   href={home.secondaryHref}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[12px] font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-[12px] font-semibold transition",
+                    hasBanner
+                      ? "border-white/40 bg-white/10 text-white backdrop-blur hover:bg-white/20"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary",
+                  )}
                 >
                   {home.secondaryLabel}
                 </Link>
               ) : null}
             </div>
 
-            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-[11.5px] text-slate-500">
-              <span className="inline-flex items-center gap-1.5"><BadgeCheck className="h-4 w-4 text-emerald-500" /> ATAB-style service standards</span>
-              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-emerald-500" /> Secure document handling</span>
-              <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4 text-emerald-500" /> Replies within one business day</span>
+            <div
+              className={cn(
+                "mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-[11.5px]",
+                banner.align === "center" ? "justify-center" : "",
+                hasBanner ? "text-white/80" : "text-slate-500",
+              )}
+            >
+              <span className="inline-flex items-center gap-1.5"><BadgeCheck className="h-4 w-4 text-emerald-400" /> ATAB-style service standards</span>
+              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-emerald-400" /> Secure document handling</span>
+              <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4 text-emerald-400" /> Replies within one business day</span>
             </div>
           </div>
 
-          <div className="relative hidden lg:block">
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-500 via-sky-600 to-blue-700 p-6 text-white shadow-[0_30px_80px_-30px_rgba(11,116,222,0.55)]">
-              <div className="absolute inset-0 opacity-25 [background-image:radial-gradient(circle_at_25%_20%,white_1px,transparent_1px)] [background-size:22px_22px]" />
-              <div className="relative flex items-start justify-between">
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70">Featured journey</p>
-                  <p className="mt-1 text-[22px] font-bold leading-tight">Maldives Overwater Escape</p>
-                  <p className="mt-1 inline-flex items-center gap-1 text-[11.5px] text-white/80"><MapPin className="h-3.5 w-3.5" /> South Malé Atoll · 5 days</p>
-                </div>
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/20 bg-white/10 backdrop-blur"><Compass className="h-5 w-5" /></span>
-              </div>
-
-              <div className="relative mt-8 grid grid-cols-3 gap-2 text-center">
-                {[
-                  { label: "Nights", value: "4" },
-                  { label: "Guests", value: "2" },
-                  { label: "Rating", value: "4.9" },
-                ].map((item) => (
-                  <div key={item.label} className="rounded-xl border border-white/15 bg-white/10 px-2 py-2.5 backdrop-blur">
-                    <p className="text-[15px] font-bold">{item.value}</p>
-                    <p className="text-[9px] uppercase tracking-wide text-white/65">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="relative mt-5 rounded-2xl bg-white p-4 text-ink">
-                <div className="flex items-center justify-between">
+          {banner.align === "left" ? (
+            <div className="relative hidden lg:block">
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary-strong to-[#042f5c] p-6 text-white shadow-[0_30px_80px_-30px_rgba(11,116,222,0.55)]">
+                <div className="absolute inset-0 opacity-25 [background-image:radial-gradient(circle_at_25%_20%,white_1px,transparent_1px)] [background-size:22px_22px]" />
+                <div className="relative flex items-start justify-between">
                   <div>
-                    <p className="text-[9.5px] uppercase tracking-wide text-slate-400">Starting from</p>
-                    <p className="text-[19px] font-bold">{formatMoney(189000, "BDT", 0)}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70">Featured journey</p>
+                    <p className="mt-1 text-[22px] font-bold leading-tight">Maldives Overwater Escape</p>
+                    <p className="mt-1 inline-flex items-center gap-1 text-[11.5px] text-white/80"><MapPin className="h-3.5 w-3.5" /> South Malé Atoll · 5 days</p>
                   </div>
-                  <Link href="/tours" className="inline-flex items-center gap-1 rounded-full bg-primary px-3.5 py-2 text-[11px] font-semibold text-white">
-                    View trips <ArrowRight className="h-3 w-3" />
-                  </Link>
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/20 bg-white/10 backdrop-blur"><Compass className="h-5 w-5" /></span>
                 </div>
-                <div className="mt-2 flex items-center gap-1.5 text-[10px] text-slate-500">
-                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> 4.9 from 128 travellers · includes transfers
+
+                <div className="relative mt-8 grid grid-cols-3 gap-2 text-center">
+                  {[
+                    { label: "Nights", value: "4" },
+                    { label: "Guests", value: "2" },
+                    { label: "Rating", value: "4.9" },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-xl border border-white/15 bg-white/10 px-2 py-2.5 backdrop-blur">
+                      <p className="text-[15px] font-bold">{item.value}</p>
+                      <p className="text-[9px] uppercase tracking-wide text-white/65">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="relative mt-5 rounded-2xl bg-white p-4 text-ink">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[9.5px] uppercase tracking-wide text-slate-400">Starting from</p>
+                      <p className="text-[19px] font-bold">{formatMoney(189000, "BDT", 0)}</p>
+                    </div>
+                    <Link href="/tours" className="inline-flex items-center gap-1 rounded-full bg-primary px-3.5 py-2 text-[11px] font-semibold text-white">
+                      View trips <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1.5 text-[10px] text-slate-500">
+                    <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> 4.9 from 128 travellers · includes transfers
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-              <div>
-                <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">Next pilgrimage departure</p>
-                <p className="mt-0.5 text-[12px] font-semibold text-ink">{nextPackage ? nextPackage.title : "Ramadan Umrah 2027"}</p>
-                <p className="mt-0.5 text-[10.5px] text-slate-500">
-                  {nextPackage ? new Date(`${nextPackage.departureDate}T00:00:00`).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "Dates on request"} · {pilgrims} pilgrims booked
-                </p>
-              </div>
-              <Link href="/hajj-umrah" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100">
-                <Landmark className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-slate-200/70 bg-white/60">
-          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 px-4 py-4 sm:px-6 lg:grid-cols-4 lg:px-8">
-            {[
-              { value: `${db.tours.length}+`, label: "Original tour packages" },
-              { value: `${db.hotels.length}+`, label: "Checked hotel partners" },
-              { value: `${db.visas.length}+`, label: "Visa products" },
-              { value: `${pilgrims}`, label: "Pilgrims booked" },
-            ].map((stat) => (
-              <div key={stat.label} className="flex items-center gap-2.5">
-                <span className="h-8 w-px bg-primary/20" />
+              <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
                 <div>
-                  <p className="text-[16px] font-bold leading-tight text-ink">{stat.value}</p>
-                  <p className="text-[10px] text-slate-500">{stat.label}</p>
+                  <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">Next pilgrimage departure</p>
+                  <p className="mt-0.5 text-[12px] font-semibold text-ink">{nextPackage ? nextPackage.title : "Ramadan Umrah 2027"}</p>
+                  <p className="mt-0.5 text-[10.5px] text-slate-500">
+                    {nextPackage ? new Date(`${nextPackage.departureDate}T00:00:00`).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "Dates on request"} · {pilgrims} pilgrims booked
+                  </p>
                 </div>
+                <Link href="/hajj-umrah" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100">
+                  <Landmark className="h-4 w-4" />
+                </Link>
               </div>
-            ))}
-          </div>
+            </div>
+          ) : null}
         </div>
+
+        {sections.stats ? (
+          <div className="relative border-t border-white/20 bg-white/70 backdrop-blur">
+            <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 px-4 py-4 sm:px-6 lg:grid-cols-4 lg:px-8">
+              {[
+                { value: `${db.tours.length}+`, label: "Original tour packages" },
+                { value: `${db.hotels.length}+`, label: "Checked hotel partners" },
+                { value: `${db.visas.length}+`, label: "Visa products" },
+                { value: `${pilgrims}`, label: "Pilgrims booked" },
+              ].map((stat) => (
+                <div key={stat.label} className="flex items-center gap-2.5">
+                  <span className="h-8 w-px bg-primary/20" />
+                  <div>
+                    <p className="text-[16px] font-bold leading-tight text-ink">{stat.value}</p>
+                    <p className="text-[10px] text-slate-500">{stat.label}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       {/* Featured tours */}
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+      {sections.featuredTours ? (
+<section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-primary">Handpicked journeys</p>
@@ -222,10 +284,11 @@ export default async function HomePage() {
           {featured.map((tour) => <TourCard key={tour.id} tour={tour} />)}
         </div>
       </section>
+      ) : null}
 
-      {/* Gallery */}
-      {gallery.length ? (
-        <section className="mx-auto max-w-7xl px-4 pb-14 pt-2 sm:px-6 lg:px-8">
+{/* Gallery */}
+      {sections.gallery && gallery.length ? (
+<section className="mx-auto max-w-7xl px-4 pb-14 pt-2 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-primary">Gallery</p>
@@ -256,8 +319,9 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {/* Services */}
-      <section className="border-y border-slate-200 bg-[#f7f9fd]">
+{/* Services */}
+      {sections.services ? (
+<section className="border-y border-slate-200 bg-page">
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
             <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-primary">One travel desk</p>
@@ -277,9 +341,11 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      ) : null}
 
-      {/* Destinations */}
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+{/* Destinations */}
+      {sections.destinations ? (
+<section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-primary">Where next?</p>
@@ -293,9 +359,11 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+      ) : null}
 
-      {/* Pilgrimage banner */}
-      <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
+{/* Pilgrimage banner */}
+      {sections.pilgrimage ? (
+<section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#07332a] via-[#0a4a3b] to-[#0b6b4f] px-6 py-8 text-white sm:px-10 sm:py-10">
           <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full border border-emerald-300/20" />
           <div className="absolute -bottom-24 right-24 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
@@ -333,9 +401,11 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      ) : null}
 
-      {/* Why us */}
-      <section className="border-y border-slate-200 bg-[#f7f9fd]">
+{/* Why us */}
+      {sections.testimonials ? (
+<section className="border-y border-slate-200 bg-page">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
           <div>
             <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-primary">Why 3M Tours &amp; Travels</p>
@@ -378,10 +448,12 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      ) : null}
 
-      {/* Closing CTA */}
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-start justify-between gap-5 rounded-3xl border border-primary/15 bg-gradient-to-r from-primary/10 via-white to-cyan-50 px-6 py-8 sm:flex-row sm:items-center sm:px-8">
+{/* Closing CTA */}
+      {sections.cta ? (
+<section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-start justify-between gap-5 rounded-3xl border border-primary/15 bg-gradient-to-r from-primary/10 via-white to-accent/10 px-6 py-8 sm:flex-row sm:items-center sm:px-8">
           <div>
             <p className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-primary">
               <CalendarDays className="h-3 w-3" /> Start with a conversation
@@ -399,6 +471,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      ) : null}
+
     </>
   );
 }

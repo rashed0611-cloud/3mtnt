@@ -126,7 +126,7 @@ export default async function HotelDetailPage({ params }: { params: Promise<{ sl
       </section>
 
       {related.length ? (
-        <section className="border-t border-slate-200 bg-[#f7f9fd]">
+        <section className="border-t border-slate-200 bg-page">
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
             <div className="flex items-end justify-between gap-3">
               <h2 className="text-[21px] font-bold tracking-tight text-ink">More stays in {hotel.location}</h2>

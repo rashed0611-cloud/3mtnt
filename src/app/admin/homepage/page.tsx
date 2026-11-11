@@ -1,24 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, GalleryHorizontalEnd, Globe2, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, GalleryHorizontalEnd, Palette, ShieldCheck, Type } from "lucide-react";
 import { HomepageForm } from "@/components/forms/homepage-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { requireModuleAccess } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
+import { FONT_OPTIONS } from "@/lib/fonts";
 
-export const metadata: Metadata = { title: "Front page & gallery" };
+export const metadata: Metadata = { title: "Website editor" };
 
 export default async function HomepageEditorPage() {
   await requireModuleAccess("settings", "view");
   const settings = await getRepository().getSettings();
+  const appearance = settings.appearance;
+  const headingFont = FONT_OPTIONS.find((font) => font.key === appearance.typography.headingFont);
+  const bodyFont = FONT_OPTIONS.find((font) => font.key === appearance.typography.bodyFont);
 
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Front page & gallery"
-        description="Edit the public home page hero, calls to action and gallery without touching code."
-        breadcrumb={[{ label: "Workspace", href: "/admin" }, { label: "Front page & gallery" }]}
+        title="Website editor"
+        description="Change the logo, banner, fonts, colours, sections and gallery — the public site updates as soon as you save."
+        breadcrumb={[{ label: "Workspace", href: "/admin" }, { label: "Website editor" }]}
         actions={
           <Link
             href="/"
@@ -30,7 +34,7 @@ export default async function HomepageEditorPage() {
         }
       />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
         <Card>
           <CardContent>
             <HomepageForm settings={settings} />
@@ -42,15 +46,55 @@ export default async function HomepageEditorPage() {
             <CardHeader>
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  <Globe2 className="h-4 w-4 text-primary" /> What you control
+                  <Palette className="h-4 w-4 text-primary" /> Current look
                 </CardTitle>
-                <CardDescription>Everything here appears on the public site.</CardDescription>
+                <CardDescription>A snapshot of the live public theme.</CardDescription>
               </div>
             </CardHeader>
-            <CardContent className="space-y-2.5 text-[11.5px] leading-5 text-slate-600">
-              <p>The hero badge, headline, highlighted phrase and introduction.</p>
-              <p>Both hero buttons, including their labels and destination links.</p>
-              <p>The gallery heading, introduction and image cards with captions and alt text.</p>
+            <CardContent className="space-y-3">
+              <div className="flex gap-1.5">
+                {Object.entries(appearance.colors).map(([key, value]) => (
+                  <span
+                    key={key}
+                    title={`${key}: ${value}`}
+                    className="h-8 flex-1 rounded-control border border-black/10"
+                    style={{ background: value }}
+                  />
+                ))}
+              </div>
+              <dl className="space-y-2 text-[11.5px]">
+                {[
+                  ["Primary", appearance.colors.primary],
+                  ["Heading font", headingFont?.label ?? appearance.typography.headingFont],
+                  ["Body font", bodyFont?.label ?? appearance.typography.bodyFont],
+                  ["Corner radius", `${appearance.typography.radius}px`],
+                  ["Banner", appearance.banner.imageUrl ? "Custom image" : "Brand gradient"],
+                  ["Logo", appearance.brand.logoUrl ? "Uploaded image" : `“${settings.logoText}” monogram`],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex items-start justify-between gap-3 border-b border-line/70 pb-1.5 last:border-0 last:pb-0">
+                    <dt className="text-slate-500">{label}</dt>
+                    <dd className="text-right font-medium text-ink">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Type className="h-4 w-4 text-primary" /> What you can edit
+                </CardTitle>
+                <CardDescription>Everything on the storefront.</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2 text-[11.5px] leading-5 text-slate-600">
+              <p>Logo, browser icon and social profiles.</p>
+              <p>Brand, accent, background, text and footer colours.</p>
+              <p>Heading and body fonts, weight and corner radius.</p>
+              <p>Hero banner image, overlay, alignment and search box.</p>
+              <p>Announcement bar, section visibility, gallery and SEO.</p>
             </CardContent>
           </Card>
 
@@ -60,7 +104,9 @@ export default async function HomepageEditorPage() {
                 <CardTitle className="flex items-center gap-2">
                   <GalleryHorizontalEnd className="h-4 w-4 text-primary" /> Gallery
                 </CardTitle>
-                <CardDescription>{settings.gallery.length} image{settings.gallery.length === 1 ? "" : "s"} published</CardDescription>
+                <CardDescription>
+                  {settings.gallery.length} image{settings.gallery.length === 1 ? "" : "s"} published
+                </CardDescription>
               </div>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-2">

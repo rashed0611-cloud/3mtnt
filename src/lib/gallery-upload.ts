@@ -8,28 +8,36 @@ import { createSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase/
 const BUCKET = "site-media";
 export const MAX_GALLERY_IMAGE_BYTES = 4 * 1024 * 1024;
 
+export type SiteMediaFolder = "gallery" | "brand" | "banner" | "seo";
+
+const FOLDERS: SiteMediaFolder[] = ["gallery", "brand", "banner", "seo"];
+
 const ALLOWED_TYPES = new Map<string, string>([
   ["image/jpeg", "jpg"],
   ["image/png", "png"],
   ["image/webp", "webp"],
   ["image/gif", "gif"],
   ["image/avif", "avif"],
+  ["image/svg+xml", "svg"],
+  ["image/x-icon", "ico"],
+  ["image/vnd.microsoft.icon", "ico"],
 ]);
 
 /**
- * Stores a gallery upload in Supabase Storage when configured, otherwise in
- * `public/uploads/gallery` for local/self-hosted development.
+ * Stores an uploaded site asset in Supabase Storage when configured, otherwise
+ * in `public/uploads/<folder>` for local/self-hosted development.
  */
-export async function uploadGalleryImage(file: File): Promise<string> {
+export async function uploadSiteImage(file: File, folder: SiteMediaFolder = "gallery"): Promise<string> {
   if (!file || file.size === 0) throw new Error("Choose an image file to upload.");
   if (file.size > MAX_GALLERY_IMAGE_BYTES) {
     throw new Error("Each image must be 4 MB or smaller.");
   }
   const extension = ALLOWED_TYPES.get(file.type);
   if (!extension) {
-    throw new Error("Use a JPG, PNG, WebP, GIF or AVIF image.");
+    throw new Error("Use a JPG, PNG, WebP, GIF, AVIF, SVG or ICO file.");
   }
 
+  const target = FOLDERS.includes(folder) ? folder : "gallery";
   const filename = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${extension}`;
 
   if (isSupabaseConfigured()) {
@@ -39,16 +47,20 @@ export async function uploadGalleryImage(file: File): Promise<string> {
       const { error } = await admin.storage.createBucket(BUCKET, { public: true });
       if (error) throw new Error(`Could not prepare image storage: ${error.message}`);
     }
-    const { error } = await admin.storage.from(BUCKET).upload(`gallery/${filename}`, file, {
+    const { error } = await admin.storage.from(BUCKET).upload(`${target}/${filename}`, file, {
       contentType: file.type,
       upsert: false,
     });
     if (error) throw new Error(`Could not upload the image: ${error.message}`);
-    return admin.storage.from(BUCKET).getPublicUrl(`gallery/${filename}`).data.publicUrl;
+    return admin.storage.from(BUCKET).getPublicUrl(`${target}/${filename}`).data.publicUrl;
   }
 
-  const directory = path.join(process.cwd(), "public", "uploads", "gallery");
+  const directory = path.join(process.cwd(), "public", "uploads", target);
   await mkdir(directory, { recursive: true });
   await writeFile(path.join(directory, filename), Buffer.from(await file.arrayBuffer()));
-  return `/uploads/gallery/${filename}`;
+  return `/uploads/${target}/${filename}`;
+}
+
+export function uploadGalleryImage(file: File): Promise<string> {
+  return uploadSiteImage(file, "gallery");
 }

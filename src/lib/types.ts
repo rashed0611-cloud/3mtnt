@@ -256,6 +256,75 @@ export interface HomepageContent {
   gallerySubtitle: string;
 }
 
+export interface SiteBrand {
+  logoUrl: string;
+  faviconUrl: string;
+  logoTagline: string;
+  facebook: string;
+  instagram: string;
+  youtube: string;
+  linkedin: string;
+  whatsapp: string;
+}
+
+export interface SiteColors {
+  primary: string;
+  accent: string;
+  page: string;
+  text: string;
+  footer: string;
+}
+
+export interface SiteTypography {
+  headingFont: string;
+  bodyFont: string;
+  headingWeight: number;
+  radius: number;
+}
+
+export interface SiteBanner {
+  imageUrl: string;
+  overlay: number;
+  align: "left" | "center";
+  height: "compact" | "standard" | "tall";
+  showSearch: boolean;
+}
+
+export interface SiteAnnouncement {
+  enabled: boolean;
+  text: string;
+  linkLabel: string;
+  linkHref: string;
+  tone: "brand" | "dark" | "light";
+}
+
+export interface SiteSections {
+  featuredTours: boolean;
+  services: boolean;
+  destinations: boolean;
+  gallery: boolean;
+  pilgrimage: boolean;
+  testimonials: boolean;
+  stats: boolean;
+  cta: boolean;
+}
+
+export interface SiteSeo {
+  title: string;
+  description: string;
+  ogImageUrl: string;
+}
+
+export interface SiteAppearance {
+  brand: SiteBrand;
+  colors: SiteColors;
+  typography: SiteTypography;
+  banner: SiteBanner;
+  announcement: SiteAnnouncement;
+  sections: SiteSections;
+  seo: SiteSeo;
+}
+
 export interface AppSettings {
   siteName: string;
   tagline: string;
@@ -273,6 +342,7 @@ export interface AppSettings {
   tourDepositPercent: number;
   homepage: HomepageContent;
   gallery: GalleryImage[];
+  appearance: SiteAppearance;
 }
 
 export interface Database {

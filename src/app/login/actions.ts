@@ -33,8 +33,23 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
 
   if (isSupabaseConfigured()) {
     const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: error.message, email };
+
+    // Mirror the session into a signed workspace cookie so pages and server
+    // actions do not depend on an auth round-trip on every request.
+    const user = data.user;
+    const store = await cookies();
+    store.set(
+      SESSION_COOKIE,
+      createSessionToken({
+        id: user?.id ?? email,
+        name: (user?.user_metadata?.full_name as string | undefined) || email.split("@")[0] || "Administrator",
+        email: user?.email ?? email,
+        role: (user?.user_metadata?.role as string | undefined) ?? (user?.app_metadata?.role as string | undefined) ?? "guest",
+      }),
+      sessionCookieOptions(),
+    );
     redirect(next);
   }
 

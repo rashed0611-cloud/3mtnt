@@ -42,7 +42,7 @@ export default async function HotelsPage({
 
   return (
     <>
-      <section className="border-b border-slate-200 bg-gradient-to-b from-[#eef5ff] to-white">
+      <section className="border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary">Home</Link>

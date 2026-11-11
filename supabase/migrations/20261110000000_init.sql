@@ -269,7 +269,8 @@ create table if not exists public.app_settings (
   tour_cancellation_days integer not null default 7,
   tour_deposit_percent numeric(5, 2) not null default 30,
   homepage jsonb not null default '{}'::jsonb,
-  gallery jsonb not null default '[]'::jsonb
+  gallery jsonb not null default '[]'::jsonb,
+  appearance jsonb not null default '{}'::jsonb
 );
 
 -- ---------------------------------------------------------------------------

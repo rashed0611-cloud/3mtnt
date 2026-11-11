@@ -15,20 +15,39 @@ const LINKS = [
   { label: "Contact", href: "/contact" },
 ];
 
-export function SiteHeader({ siteName = "3M Tours & Travels", signedIn = false }: { siteName?: string; signedIn?: boolean }) {
+export function SiteHeader({
+  siteName = "3M Tours & Travels",
+  signedIn = false,
+  logoUrl = "",
+  logoText = "3M",
+  tagline = "& Travels",
+}: {
+  siteName?: string;
+  signedIn?: boolean;
+  logoUrl?: string;
+  logoText?: string;
+  tagline?: string;
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const words = siteName.split(" ");
+  const primaryLine = words.length > 1 ? `${words[0]} ${words[1]}` : siteName;
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2.5" aria-label={`${siteName} home`}>
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[#075bb0] text-white shadow-sm">
-            <Compass className="h-5 w-5" />
-          </span>
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt={siteName} className="h-10 w-auto max-w-[170px] object-contain" />
+          ) : (
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-strong text-white shadow-sm">
+              {logoText ? <span className="text-[11px] font-bold tracking-tight">{logoText}</span> : <Compass className="h-5 w-5" />}
+            </span>
+          )}
           <span className="leading-tight">
-            <span className="block text-[15px] font-bold tracking-tight text-ink">3M Tours</span>
-            <span className="block text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-400">&amp; Travels</span>
+            <span className="block text-[15px] font-bold tracking-tight text-ink">{primaryLine}</span>
+            <span className="block text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-400">{tagline}</span>
           </span>
         </Link>
 
