@@ -10,9 +10,11 @@ import {
   Route,
   ShieldCheck,
   Sparkles,
+  Search,
   Ticket,
   Users,
 } from "lucide-react";
+import { FlightSearchForm } from "@/components/public/flight-search-form";
 import { InquiryForm } from "@/components/public/inquiry-form";
 import { getRepository } from "@/lib/db";
 
@@ -76,8 +78,9 @@ const FAQS = [
     answer: "We monitor the booking and contact you with the new timing and rebooking options. Airline policies determine any fare difference.",
   },
   {
-    question: "Are fares shown on this page live prices?",
-    answer: "No. Fares move constantly, so we confirm the current price and rules before you commit. The quote you approve is the amount you pay.",
+    question: "Are the fares shown in the search live prices?",
+    answer:
+      "No. The search shows an indicative band built from the route, cabin and trip type so you can plan. Fares move constantly, so the desk confirms the current price, taxes and rules before you commit — the quote you approve is the amount you pay.",
   },
 ];
 
@@ -86,7 +89,7 @@ export default async function FlightsPage() {
 
   return (
     <>
-      <section className="border-b border-slate-200 bg-gradient-to-b from-[#eef7ff] to-white">
+      <section className="border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary">Home</Link>
@@ -100,15 +103,16 @@ export default async function FlightsPage() {
               </span>
               <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">Flights, planned properly</h1>
               <p className="mt-1.5 max-w-2xl text-[12.5px] leading-6 text-slate-500">
-                Fare quotes, routing advice and ticketing from the same operations team that handles your tour, hotel or visa file.
-                No bots, no surprise connection times — just a clear itinerary and a price you can approve.
+                Search <span className="font-semibold text-ink">one-way or round-trip</span> flights below for an instant indicative
+                fare band, then let the same operations team that handles your tour, hotel or visa file confirm live options. No
+                account, no bots, no surprise connection times.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
-                <Link href="#flight-enquiry" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-[12px] font-semibold text-white shadow-sm hover:bg-primary-strong">
-                  Request a fare quote <ArrowRight className="h-3.5 w-3.5" />
+                <Link href="#flight-search" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-[12px] font-semibold text-white shadow-sm hover:bg-primary-strong">
+                  Search flights <Search className="h-3.5 w-3.5" />
                 </Link>
-                <Link href="/tours" className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[12px] font-semibold text-slate-600 hover:border-primary/30 hover:text-primary">
-                  Browse tour packages
+                <Link href="#flight-enquiry" className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[12px] font-semibold text-slate-600 hover:border-primary/30 hover:text-primary">
+                  Request a fare quote <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
             </div>
@@ -135,6 +139,15 @@ export default async function FlightsPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        <div id="flight-search" className="mx-auto max-w-7xl scroll-mt-20 px-4 pb-9 sm:px-6 lg:px-8">
+          <FlightSearchForm />
+          <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px] text-slate-400">
+            <span>Open to everyone — no login needed.</span>
+            <span className="hidden sm:inline">·</span>
+            <span>Indicative fares only; the desk confirms live prices before ticketing.</span>
+          </p>
         </div>
       </section>
 
