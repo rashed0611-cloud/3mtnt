@@ -257,7 +257,7 @@ export default async function HomePage() {
               />
               <div
                 className={cn(
-                  "mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10.5px]",
+                  "mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 pr-16 text-[10.5px]",
                   hasBanner ? "text-white/80" : "text-slate-500",
                 )}
               >
