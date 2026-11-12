@@ -299,12 +299,15 @@ export interface SiteAnnouncement {
 }
 
 export interface SiteSections {
+  offers: boolean;
   featuredTours: boolean;
   services: boolean;
   destinations: boolean;
   gallery: boolean;
   pilgrimage: boolean;
+  visas: boolean;
   testimonials: boolean;
+  tips: boolean;
   stats: boolean;
   cta: boolean;
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Landmark, MapPin, Moon, Plane, Search, Users } from "lucide-react";
-import { getRepository } from "@/lib/db";
+import { getPublicDatabase } from "@/lib/db/public";
 import { formatDate, formatMoney, percent, titleCase } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export default async function HajjUmrahPage({
   searchParams: Promise<{ q?: string; kind?: string }>;
 }) {
   const params = await searchParams;
-  const db = await getRepository().getDatabase();
+  const db = await getPublicDatabase();
   const term = (params.q ?? "").trim().toLowerCase();
   const today = new Date().toISOString().slice(0, 10);
 

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock3, FileCheck2, FileSearch, Globe2, Search, Wallet } from "lucide-react";
-import { getRepository } from "@/lib/db";
+import { getPublicDatabase } from "@/lib/db/public";
 import { formatMoney } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Visa services",
+  title: "Visa",
   description: "Visa products with processing times, fees and document checklists for popular destinations.",
 };
 
@@ -15,7 +15,7 @@ export default async function VisasPage({
   searchParams: Promise<{ q?: string; country?: string }>;
 }) {
   const params = await searchParams;
-  const db = await getRepository().getDatabase();
+  const db = await getPublicDatabase();
   const term = (params.q ?? "").trim().toLowerCase();
   const countries = Array.from(new Set(db.visas.map((visa) => visa.country))).sort();
 
@@ -40,14 +40,14 @@ export default async function VisasPage({
           <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary">Home</Link>
             <span>/</span>
-            <span className="text-slate-600">Visas</span>
+            <span className="text-slate-600">Visa</span>
           </nav>
           <div className="mt-3 grid gap-6 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-700">
                 <FileCheck2 className="h-3 w-3" /> {db.visas.length} visa products · {countries.length} countries
               </span>
-              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">Visa services</h1>
+              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">Visa</h1>
               <p className="mt-1.5 max-w-2xl text-[12.5px] leading-6 text-slate-500">
                 Clear requirements, realistic processing windows and a document checklist for every application. We prepare, check and
                 track the file from submission to decision.

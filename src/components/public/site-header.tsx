@@ -3,31 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, ChevronDown, Compass, Menu, Search, X } from "lucide-react";
+import { ArrowRight, Compass, Menu, Sparkles, X } from "lucide-react";
+import { LanguageMenu } from "@/components/public/language-menu";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
-  { label: "Tours", href: "/tours" },
+  { label: "Flights", href: "/flights" },
   { label: "Hotels", href: "/hotels" },
-  { label: "Visas", href: "/visas" },
-  {
-    label: "Flights",
-    href: "/flights",
-    children: [
-      {
-        label: "Search flights",
-        href: "/flights/search",
-        hint: "One way or round trip · open to everyone",
-        icon: Search,
-      },
-      {
-        label: "Flight desk",
-        href: "/flights",
-        hint: "Quotes, reissues and group travel",
-        icon: Compass,
-      },
-    ],
-  },
+  { label: "Holidays", href: "/tours" },
+  { label: "Visa", href: "/visas" },
   { label: "Hajj & Umrah", href: "/hajj-umrah" },
   { label: "Contact", href: "/contact" },
 ];
@@ -46,14 +30,12 @@ export function SiteHeader({
   tagline?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [flightOpen, setFlightOpen] = useState(false);
   const pathname = usePathname();
-  const words = siteName.split(" ");
+  const words = siteName.replace(/\s*ERP\s*$/i, "").split(" ");
   const primaryLine = words.length > 1 ? `${words[0]} ${words[1]}` : siteName;
 
   useEffect(() => {
     setOpen(false);
-    setFlightOpen(false);
   }, [pathname]);
 
   return (
@@ -74,145 +56,88 @@ export function SiteHeader({
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
+        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Main navigation">
           {LINKS.map((link) => {
             const active = pathname === link.href || (link.href !== "/" && pathname.startsWith(`${link.href}/`));
-
-            if (!link.children) {
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "rounded-full px-3.5 py-2 text-[12.5px] font-medium transition",
-                    active ? "bg-primary/10 text-primary" : "text-slate-600 hover:bg-slate-100 hover:text-ink",
-                  )}
-                >
-                  {link.label}
-                </Link>
-              );
-            }
-
             return (
-              <div
+              <Link
                 key={link.href}
-                className="relative"
-                onMouseEnter={() => setFlightOpen(true)}
-                onMouseLeave={() => setFlightOpen(false)}
+                href={link.href}
+                className={cn(
+                  "rounded-full px-3 py-2 text-[12.5px] font-medium transition",
+                  active ? "bg-primary/10 text-primary" : "text-slate-600 hover:bg-slate-100 hover:text-ink",
+                )}
               >
-                <button
-                  type="button"
-                  onClick={() => setFlightOpen((value) => !value)}
-                  aria-expanded={flightOpen}
-                  aria-haspopup="menu"
-                  className={cn(
-                    "inline-flex items-center gap-1 rounded-full px-3.5 py-2 text-[12.5px] font-medium transition",
-                    active ? "bg-primary/10 text-primary" : "text-slate-600 hover:bg-slate-100 hover:text-ink",
-                  )}
-                >
-                  {link.label}
-                  <ChevronDown className={cn("h-3.5 w-3.5 transition", flightOpen && "rotate-180")} />
-                </button>
-
-                {flightOpen ? (
-                  <div className="absolute left-0 top-full w-[290px] pt-2">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.35)]">
-                      {link.children.map((child) => {
-                        const Icon = child.icon;
-                        return (
-                          <Link
-                            key={child.href}
-                            href={child.href}
-                            className="flex items-start gap-2.5 rounded-xl px-2.5 py-2.5 transition hover:bg-primary/5"
-                          >
-                            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                              <Icon className="h-3.5 w-3.5" />
-                            </span>
-                            <span className="min-w-0">
-                              <span className="block text-[12.5px] font-semibold text-ink">{child.label}</span>
-                              <span className="mt-0.5 block text-[10.5px] leading-4 text-slate-500">{child.hint}</span>
-                            </span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+                {link.label}
+              </Link>
             );
           })}
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
           <Link
-            href={signedIn ? "/admin" : "/login"}
-            className="rounded-full border border-slate-200 bg-white px-3.5 py-2 text-[12px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-ink"
+            href="/plan"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-[12px] font-semibold transition",
+              pathname.startsWith("/plan")
+                ? "border-primary/30 bg-primary/10 text-primary"
+                : "border-slate-200 text-slate-600 hover:border-primary/30 hover:text-primary",
+            )}
           >
-            {signedIn ? "Open workspace" : "Staff login"}
+            <Sparkles className="h-3.5 w-3.5" /> Plan with AI
           </Link>
+          <LanguageMenu />
           <Link
-            href="/flights/search"
+            href={signedIn ? "/admin" : "/login"}
             className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-[12px] font-semibold text-white shadow-sm transition hover:bg-primary-strong"
           >
-            Search flights <ArrowRight className="h-3.5 w-3.5" />
+            {signedIn ? "My workspace" : "Sign in"}
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setOpen((value) => !value)}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 lg:hidden"
-          aria-expanded={open}
-          aria-label={open ? "Close menu" : "Open menu"}
-        >
-          {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-        </button>
+        <div className="flex items-center gap-1.5 lg:hidden">
+          <LanguageMenu />
+          <button
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600"
+            aria-expanded={open}
+            aria-label={open ? "Close menu" : "Open menu"}
+          >
+            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
+        </div>
       </div>
 
       {open ? (
         <div className="border-t border-slate-200 bg-white px-4 pb-4 pt-2 lg:hidden">
           <nav className="grid gap-1" aria-label="Mobile navigation">
             {LINKS.map((link) => (
-              <div key={link.href}>
-                <Link
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-between rounded-lg px-3 py-2.5 text-[13px] font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  {link.label}
-                </Link>
-                {link.children ? (
-                  <div className="mb-1 ml-3 grid gap-0.5 border-l border-slate-200 pl-3">
-                    {link.children.map((child) => (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        onClick={() => setOpen(false)}
-                        className="rounded-lg px-3 py-2 text-[12.5px] font-medium text-slate-600 hover:bg-slate-50 hover:text-primary"
-                      >
-                        {child.label}
-                        <span className="mt-0.5 block text-[10.5px] font-normal leading-4 text-slate-400">{child.hint}</span>
-                      </Link>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className="rounded-lg px-3 py-2.5 text-[13px] font-medium text-slate-700 hover:bg-slate-50"
+              >
+                {link.label}
+              </Link>
             ))}
           </nav>
           <div className="mt-3 grid gap-2 border-t border-slate-100 pt-3">
             <Link
-              href="/flights/search"
+              href="/plan"
               onClick={() => setOpen(false)}
               className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-[12.5px] font-semibold text-white"
             >
-              <Search className="h-4 w-4" /> Search flights
+              <Sparkles className="h-4 w-4" /> Plan with AI
             </Link>
             <Link
               href={signedIn ? "/admin" : "/login"}
               onClick={() => setOpen(false)}
               className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2.5 text-[12.5px] font-semibold text-slate-600"
             >
-              {signedIn ? "Open workspace" : "Staff login"}
+              {signedIn ? "My workspace" : "Sign in"}
             </Link>
           </div>
         </div>

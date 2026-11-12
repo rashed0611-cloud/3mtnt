@@ -58,8 +58,9 @@ export const AIRPORTS: Airport[] = [
 const AIRPORT_MAP = new Map(AIRPORTS.map((airport) => [airport.code, airport]));
 
 export const TRIP_TYPES = [
-  { key: "oneway", label: "One way" },
+  { key: "oneway", label: "One-way" },
   { key: "round", label: "Round trip" },
+  { key: "multi", label: "Multi-city" },
 ] as const;
 
 export type TripType = (typeof TRIP_TYPES)[number]["key"];
@@ -73,7 +74,7 @@ export const CABIN_CLASSES = [
 export type CabinClass = (typeof CABIN_CLASSES)[number]["key"];
 
 export function isTripType(value: unknown): value is TripType {
-  return value === "oneway" || value === "round";
+  return value === "oneway" || value === "round" || value === "multi";
 }
 
 export function isCabinClass(value: unknown): value is CabinClass {
@@ -144,6 +145,12 @@ export function routeType(km: number) {
   return "Long-haul";
 }
 
+export interface FlightLeg {
+  from: Airport;
+  to: Airport;
+  depart: string;
+}
+
 export interface FlightQuery {
   trip: TripType;
   from: Airport;
@@ -154,6 +161,8 @@ export interface FlightQuery {
   children: number;
   infants: number;
   cabin: CabinClass;
+  /** Every flown segment, including the return leg of a round trip. */
+  legs: FlightLeg[];
 }
 
 export type FlightSearchParams = Record<string, string | string[] | undefined>;
@@ -165,6 +174,10 @@ function first(value: string | string[] | undefined) {
 function whole(value: string | string[] | undefined, fallback: number) {
   const number = Number.parseInt(first(value), 10);
   return Number.isFinite(number) ? number : fallback;
+}
+
+function legField(index: number, name: string) {
+  return index === 0 ? name : `${name}${index + 1}`;
 }
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -181,6 +194,10 @@ function isRealDate(value: string) {
  */
 export function parseFlightSearch(params: FlightSearchParams, now = new Date()) {
   const errors: string[] = [];
+  const trip: TripType = isTripType(first(params.trip)) ? (first(params.trip) as TripType) : "oneway";
+  const today = todayISO(now);
+  const horizon = addDaysISO(today, 400);
+
   const from = airportByCode(first(params.from)) ?? AIRPORTS[0];
   const to = airportByCode(first(params.to));
 
@@ -188,19 +205,31 @@ export function parseFlightSearch(params: FlightSearchParams, now = new Date()) 
   if (!to) errors.push("Choose a destination airport from the list.");
   if (to && from.code === to.code) errors.push("The departure and destination airports must be different.");
 
-  const trip: TripType = isTripType(first(params.trip)) ? (first(params.trip) as TripType) : "oneway";
   const depart = first(params.depart);
-  const ret = first(params.return);
-  const today = todayISO(now);
-  const horizon = addDaysISO(today, 400);
-
-  if (!depart) errors.push("Choose a departure date.");
-  else if (!isRealDate(depart)) errors.push("The departure date is not a valid date.");
-  else if (depart < today) errors.push("The departure date cannot be in the past.");
-  else if (depart > horizon) errors.push("Searches are open for the next 12 months.");
+  const checkDate = (value: string, label: string) => {
+    if (!value) {
+      errors.push(label === "departure" ? "Choose a departure date." : `Choose the date for flight ${label}.`);
+      return false;
+    }
+    if (!isRealDate(value)) {
+      errors.push(`The ${label} date is not a valid date.`);
+      return false;
+    }
+    if (value < today) {
+      errors.push(`The ${label} date cannot be in the past.`);
+      return false;
+    }
+    if (value > horizon) {
+      errors.push("Searches are open for the next 12 months.");
+      return false;
+    }
+    return true;
+  };
+  const firstDateOk = checkDate(depart, "departure");
 
   let returnDate = "";
   if (trip === "round") {
+    const ret = first(params.return);
     if (!ret) errors.push("Choose a return date for a round trip.");
     else if (!isRealDate(ret)) errors.push("The return date is not a valid date.");
     else if (depart && ret <= depart) errors.push("The return date must be after the departure date.");
@@ -216,23 +245,67 @@ export function parseFlightSearch(params: FlightSearchParams, now = new Date()) 
   if (infants < 0 || infants > adults) errors.push("There cannot be more infants than adults.");
 
   const cabin: CabinClass = isCabinClass(first(params.cabin)) ? (first(params.cabin) as CabinClass) : "economy";
+  const firstTo = to ?? AIRPORTS[1];
+
+  const legs: FlightLeg[] = [];
+  if (firstDateOk) legs.push({ from, to: firstTo, depart });
+
+  if (trip === "multi") {
+    let previous = depart;
+    for (let index = 1; index < 3; index += 1) {
+      const rawFrom = first(params[legField(index, "from")]);
+      const rawTo = first(params[legField(index, "to")]);
+      const rawDate = first(params[legField(index, "depart")]);
+      const hasAny = Boolean(rawFrom || rawTo || rawDate);
+      if (!hasAny) {
+        if (index === 1) errors.push("Add a second flight for a multi-city search.");
+        break;
+      }
+
+      const legFrom = airportByCode(rawFrom);
+      const legTo = airportByCode(rawTo);
+      if (!legFrom) errors.push(`Choose the departure airport for flight ${index + 1}.`);
+      if (!legTo) errors.push(`Choose the destination airport for flight ${index + 1}.`);
+      if (legFrom && legTo && legFrom.code === legTo.code) errors.push(`Flight ${index + 1} needs two different airports.`);
+      const dateOk = checkDate(rawDate, String(index + 1));
+      if (dateOk && previous && rawDate <= previous) errors.push(`Flight ${index + 1} must depart after flight ${index}.`);
+
+      if (!legFrom || !legTo || !dateOk || (previous && rawDate <= previous)) break;
+      legs.push({ from: legFrom, to: legTo, depart: rawDate });
+      previous = rawDate;
+    }
+  } else if (trip === "round" && returnDate) {
+    legs.push({ from: firstTo, to: from, depart: returnDate });
+  }
 
   const query: FlightQuery = {
     trip,
     from,
-    to: to ?? AIRPORTS[1],
+    to: firstTo,
     depart,
     ret: returnDate,
     adults: Math.min(9, Math.max(1, adults)),
     children: Math.min(8, Math.max(0, children)),
     infants: Math.min(4, Math.max(0, infants)),
     cabin,
+    legs,
   };
 
   return { query, errors };
 }
 
-export function flightSearchHref(query: Pick<FlightQuery, "trip" | "depart" | "ret" | "adults" | "children" | "infants" | "cabin"> & { from: Airport | string; to: Airport | string }) {
+export function routeDistanceKm(query: Pick<FlightQuery, "from" | "to" | "legs">) {
+  const legs = query.legs.length ? query.legs : [{ from: query.from, to: query.to, depart: "" }];
+  return legs.reduce((total, leg) => total + distanceKm(leg.from, leg.to), 0);
+}
+
+export function flightSearchHref(
+  query: Pick<FlightQuery, "trip" | "depart" | "ret" | "adults" | "children" | "infants" | "cabin"> & {
+    from: Airport | string;
+    to: Airport | string;
+    legs?: FlightLeg[];
+  },
+) {
   const params = new URLSearchParams({
     trip: query.trip,
     from: typeof query.from === "string" ? query.from : query.from.code,
@@ -244,6 +317,14 @@ export function flightSearchHref(query: Pick<FlightQuery, "trip" | "depart" | "r
     cabin: query.cabin,
   });
   if (query.trip === "round" && query.ret) params.set("return", query.ret);
+  if (query.trip === "multi" && query.legs?.length) {
+    for (let index = 1; index < query.legs.length; index += 1) {
+      const leg = query.legs[index];
+      params.set(legField(index, "from"), leg.from.code);
+      params.set(legField(index, "to"), leg.to.code);
+      params.set(legField(index, "depart"), leg.depart);
+    }
+  }
   return `/flights/search?${params.toString()}`;
 }
 
@@ -278,13 +359,17 @@ export interface FareBand {
  * fare against live inventory before anything is ticketed.
  */
 export function fareBands(query: FlightQuery): FareBand[] {
-  const km = distanceKm(query.from, query.to);
-  const oneWay = 9000 + km * 7.5;
-  const tripFactor = query.trip === "round" ? 1.8 : 1;
+  const legs = query.legs.length ? query.legs : [{ from: query.from, to: query.to, depart: "" }];
+  const baseFare =
+    query.trip === "multi"
+      ? legs.reduce((total, leg) => total + 9000 + distanceKm(leg.from, leg.to) * 7.5, 0)
+      : query.trip === "round"
+        ? (9000 + distanceKm(query.from, query.to) * 7.5) * 1.8
+        : 9000 + routeDistanceKm(query) * 7.5;
   const seats = chargeableSeats(query);
 
   return CABIN_CLASSES.map((cabin) => {
-    const base = oneWay * tripFactor * cabin.factor;
+    const base = baseFare * cabin.factor;
     const perPersonLow = roundToHundred(base * 0.88);
     const perPersonHigh = roundToHundred(base * 1.18);
     return {

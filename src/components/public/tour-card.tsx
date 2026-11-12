@@ -73,7 +73,7 @@ export function DestinationTile({
       <div className="absolute -right-2 -top-2 h-14 w-14 rounded-full border border-white/20" />
       <div className="relative">
         <p className="inline-flex items-center gap-1 text-[10px] font-medium text-white/75">
-          <MapPin className="h-3 w-3" /> {count} {count === 1 ? "journey" : "journeys"}
+          <MapPin className="h-3 w-3" /> {count} {count === 1 ? "holiday" : "holidays"}
         </p>
         <p className="mt-1 text-[18px] font-bold leading-tight">{destination}</p>
         <p className="mt-0.5 text-[11px] text-white/80">From {formatMoney(from, "BDT", 0)}</p>

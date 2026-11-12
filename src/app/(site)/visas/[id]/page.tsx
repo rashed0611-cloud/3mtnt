@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, Check, Clock3, FileCheck2, Globe2, Phone, ShieldCheck, Timer, Wallet } from "lucide-react";
-import { getRepository } from "@/lib/db";
+import { getPublicDatabase } from "@/lib/db/public";
 import { formatMoney } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const db = await getRepository().getDatabase();
+  const db = await getPublicDatabase();
   const visa = db.visas.find((item) => item.id === id);
   if (!visa) return { title: "Visa not found" };
   return { title: `${visa.country} ${visa.visaType}`, description: visa.description.slice(0, 160) };
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function VisaDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const db = await getRepository().getDatabase();
+  const db = await getPublicDatabase();
   const visa = db.visas.find((item) => item.id === id);
   if (!visa) notFound();
 
@@ -29,7 +29,7 @@ export default async function VisaDetailPage({ params }: { params: Promise<{ id:
           <nav className="flex flex-wrap items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary">Home</Link>
             <span>/</span>
-            <Link href="/visas" className="hover:text-primary">Visas</Link>
+            <Link href="/visas" className="hover:text-primary">Visa</Link>
             <span>/</span>
             <span className="text-slate-600">{visa.country}</span>
           </nav>

@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { FlightSearchForm } from "@/components/public/flight-search-form";
 import { InquiryForm } from "@/components/public/inquiry-form";
-import { getRepository } from "@/lib/db";
+import { getPublicSettings } from "@/lib/db/public";
 
 export const metadata: Metadata = {
   title: "Flights",
@@ -85,7 +85,7 @@ const FAQS = [
 ];
 
 export default async function FlightsPage() {
-  const settings = await getRepository().getSettings();
+  const settings = await getPublicSettings();
 
   return (
     <>
@@ -103,9 +103,9 @@ export default async function FlightsPage() {
               </span>
               <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">Flights, planned properly</h1>
               <p className="mt-1.5 max-w-2xl text-[12.5px] leading-6 text-slate-500">
-                Search <span className="font-semibold text-ink">one-way or round-trip</span> flights below for an instant indicative
-                fare band, then let the same operations team that handles your tour, hotel or visa file confirm live options. No
-                account, no bots, no surprise connection times.
+                Search <span className="font-semibold text-ink">one-way, round-trip or multi-city</span> flights below for an instant
+                indicative fare band, then let the same operations team that handles your holiday, hotel or visa file confirm live
+                options. No account, no bots, no surprise connection times.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link href="#flight-search" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-[12px] font-semibold text-white shadow-sm hover:bg-primary-strong">

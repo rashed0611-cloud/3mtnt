@@ -4,12 +4,12 @@ import type { AppSettings } from "@/lib/types";
 
 const COLUMNS = [
   {
-    title: "Explore",
+    title: "Book",
     links: [
-      { label: "Tour packages", href: "/tours" },
-      { label: "Hotels", href: "/hotels" },
-      { label: "Visa services", href: "/visas" },
       { label: "Flights", href: "/flights" },
+      { label: "Hotels", href: "/hotels" },
+      { label: "Holidays", href: "/tours" },
+      { label: "Visa", href: "/visas" },
       { label: "Hajj & Umrah", href: "/hajj-umrah" },
     ],
   },
@@ -17,9 +17,9 @@ const COLUMNS = [
     title: "Company",
     links: [
       { label: "About 3M Tours", href: "/contact" },
-      { label: "Plan a trip", href: "/contact" },
+      { label: "Plan with AI", href: "/plan" },
       { label: "Customer portal", href: "/portal" },
-      { label: "Staff workspace", href: "/login" },
+      { label: "Staff sign in", href: "/login" },
     ],
   },
   {
@@ -109,10 +109,10 @@ export function SiteFooter({ settings }: { settings: AppSettings }) {
         </div>
 
         <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-6 text-[11px] text-slate-500 sm:flex-row sm:items-center">
-          <p>© {new Date().getFullYear()} {settings.legalName}. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {settings.legalName}{settings.legalName.trim().endsWith(".") ? "" : "."} All rights reserved.</p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             <span>Independent travel agency · Dhaka, Bangladesh</span>
-            <Link href="/login" className="transition hover:text-slate-300">Staff login</Link>
+            <Link href="/login" className="transition hover:text-slate-300">Staff sign in</Link>
           </div>
         </div>
       </div>

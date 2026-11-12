@@ -4,7 +4,6 @@ import { getRepository } from "@/lib/db";
 import {
   TRIP_TYPES,
   cabinLabel,
-  distanceKm,
   durationMinutes,
   flightReference,
   flightSearchHref,
@@ -12,6 +11,7 @@ import {
   formatFlightDate,
   parseFlightSearch,
   passengerSummary,
+  routeDistanceKm,
   selectedBand,
 } from "@/lib/flights";
 import { formatMoney } from "@/lib/utils";
@@ -54,20 +54,32 @@ export async function requestFlightQuoteAction(_prev: FlightQuoteState, formData
     return { error: "Please check the highlighted fields and try again.", fieldErrors };
   }
 
-  const search = Object.fromEntries(SEARCH_FIELDS.map((key) => [key, text(formData, key)]));
+  const search: Record<string, string> = Object.fromEntries(SEARCH_FIELDS.map((key) => [key, text(formData, key)]));
+  for (let index = 2; index <= 3; index += 1) {
+    for (const field of ["from", "to", "depart"]) {
+      const value = text(formData, `${field}${index}`);
+      if (value) search[`${field}${index}`] = value;
+    }
+  }
   const { query, errors } = parseFlightSearch(search);
   if (errors.length) {
     return { error: "That flight search is no longer valid. Please run the search again so we quote the right route." };
   }
 
   const band = selectedBand(query);
-  const tripLabel = TRIP_TYPES.find((item) => item.key === query.trip)?.label ?? "One way";
-  const route = `${query.from.city} (${query.from.code}) → ${query.to.city} (${query.to.code})`;
+  const tripLabel = TRIP_TYPES.find((item) => item.key === query.trip)?.label ?? "One-way";
+  const stops = query.legs.length
+    ? [query.legs[0].from, ...query.legs.map((leg) => leg.to)]
+    : [query.from, query.to];
+  const route = stops.map((airport) => `${airport.city} (${airport.code})`).join(" → ");
   const dates =
-    query.trip === "round"
-      ? `${formatFlightDate(query.depart)} – ${formatFlightDate(query.ret)}`
-      : formatFlightDate(query.depart);
-  const km = distanceKm(query.from, query.to);
+    query.trip === "multi"
+      ? query.legs.map((leg) => formatFlightDate(leg.depart, false)).join(" · ")
+      : query.trip === "round"
+        ? `${formatFlightDate(query.depart)} – ${formatFlightDate(query.ret)}`
+        : formatFlightDate(query.depart);
+  const km = routeDistanceKm(query);
+  const legs = Math.max(1, query.legs.length);
   const cabin = cabinLabel(query.cabin);
 
   const reference = flightReference();
@@ -75,7 +87,7 @@ export async function requestFlightQuoteAction(_prev: FlightQuoteState, formData
   const notes = [
     `Reference: ${reference}`,
     `Indicative ${cabin.toLowerCase()} band shown on the website: ${formatMoney(band.perPersonLow, "BDT", 0)}–${formatMoney(band.perPersonHigh, "BDT", 0)} per traveller; party total ${formatMoney(band.totalLow, "BDT", 0)}–${formatMoney(band.totalHigh, "BDT", 0)}.`,
-    `Route distance ${km.toLocaleString("en-US")} km, about ${formatDuration(durationMinutes(km))} non-stop.`,
+    `${legs > 1 ? `Total route distance across ${legs} flights` : "Route distance"} ${km.toLocaleString("en-US")} km, about ${formatDuration(durationMinutes(km))} total flying time.`,
     message ? `Visitor note: ${message}` : "",
     `Repeat this search: ${flightSearchHref(query)}`,
   ]

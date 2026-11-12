@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BedDouble, Building2, Hotel, MapPin, Search, Star } from "lucide-react";
+import { ArrowRight, BedDouble, Building2, CalendarDays, Hotel, MapPin, Search, Star, Users } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
-import { getRepository } from "@/lib/db";
+import { getPublicDatabase } from "@/lib/db/public";
 import { gradientFor, destinationInitials } from "@/lib/public";
 import { formatMoney } from "@/lib/utils";
 
@@ -16,12 +16,36 @@ const PAGE_SIZE = 9;
 export default async function HotelsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; location?: string; stars?: string; page?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    location?: string;
+    stars?: string;
+    checkIn?: string;
+    checkOut?: string;
+    adults?: string;
+    rooms?: string;
+    page?: string;
+  }>;
 }) {
   const params = await searchParams;
-  const db = await getRepository().getDatabase();
+  const db = await getPublicDatabase();
   const term = (params.q ?? "").trim().toLowerCase();
   const locations = Array.from(new Set(db.hotels.map((hotel) => hotel.location))).sort();
+  const stay =
+    params.checkIn && params.checkOut
+      ? {
+          from: new Date(`${params.checkIn}T00:00:00`),
+          to: new Date(`${params.checkOut}T00:00:00`),
+          guests: Math.max(1, Number(params.adults ?? 2) || 2),
+          rooms: Math.max(1, Number(params.rooms ?? 1) || 1),
+        }
+      : null;
+  const stayLabel = stay
+    ? `${stay.from.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })} – ${stay.to.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+      })} · ${stay.guests} ${stay.guests === 1 ? "guest" : "guests"} · ${stay.rooms} ${stay.rooms === 1 ? "room" : "rooms"}`
+    : "";
 
   const filtered = db.hotels
     .filter((hotel) => hotel.status === "publish")
@@ -58,6 +82,12 @@ export default async function HotelsPage({
               <p className="mt-1.5 max-w-2xl text-[12.5px] leading-6 text-slate-500">
                 City stays, beach resorts and family-friendly properties — checked by our operations team and bookable with transfers.
               </p>
+              {stay ? (
+                <p className="mt-2 inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-[10.5px] font-semibold text-violet-700">
+                  <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" /> {stayLabel}</span>
+                  <span className="inline-flex items-center gap-1 text-slate-500"><Users className="h-3 w-3" /> Rates confirmed by the desk</span>
+                </p>
+              ) : null}
             </div>
             <div className="text-right">
               <p className="text-[9.5px] uppercase tracking-wide text-slate-400">Nightly rates from</p>

@@ -16,13 +16,13 @@ import {
   X,
 } from "lucide-react";
 import { TourCard } from "@/components/public/tour-card";
-import { getRepository } from "@/lib/db";
+import { getPublicDatabase } from "@/lib/db/public";
 import { gradientFor, destinationInitials } from "@/lib/public";
 import { formatMoney, titleCase } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const db = await getRepository().getDatabase();
+  const db = await getPublicDatabase();
   const tour = db.tours.find((item) => item.slug === slug || item.id === slug);
   if (!tour) return { title: "Tour not found" };
   return {
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function TourDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const db = await getRepository().getDatabase();
+  const db = await getPublicDatabase();
   const tour = db.tours.find((item) => item.slug === slug || item.id === slug);
   if (!tour) notFound();
 

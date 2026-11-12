@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Clock3, Mail, MapPin, MessageCircle, Phone, ShieldCheck, Sparkles } from "lucide-react";
 import { InquiryForm } from "@/components/public/inquiry-form";
-import { getRepository } from "@/lib/db";
+import { getPublicDatabase } from "@/lib/db/public";
 
 export const metadata: Metadata = {
-  title: "Plan a trip",
+  title: "Contact",
   description: "Tell 3M Tours & Travels about your next journey. A specialist replies with availability, options and a clear quote.",
 };
 
@@ -33,7 +33,7 @@ export default async function ContactPage({
 }: {
   searchParams: Promise<{ interest?: string; ref?: string }>;
 }) {
-  const [params, db] = await Promise.all([searchParams, getRepository().getDatabase()]);
+  const [params, db] = await Promise.all([searchParams, getPublicDatabase()]);
   const settings = db.settings;
 
   return (
@@ -43,7 +43,7 @@ export default async function ContactPage({
           <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary">Home</Link>
             <span>/</span>
-            <span className="text-slate-600">Plan a trip</span>
+            <span className="text-slate-600">Contact</span>
           </nav>
           <div className="mt-3 max-w-2xl">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
@@ -63,7 +63,7 @@ export default async function ContactPage({
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
               <div>
-                <h2 className="text-[17px] font-bold tracking-tight text-ink">Trip enquiry</h2>
+                <h2 className="text-[17px] font-bold tracking-tight text-ink">Travel enquiry</h2>
                 <p className="mt-0.5 text-[11.5px] text-slate-500">All fields marked * are required.</p>
               </div>
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700">

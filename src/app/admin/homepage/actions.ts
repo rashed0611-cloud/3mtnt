@@ -78,10 +78,10 @@ export async function updateHomepageAction(_prev: HomepageState, formData: FormD
     headline,
     highlight,
     subtitle,
-    primaryLabel: toText(formData.get("primaryLabel")) || "Browse tours",
+    primaryLabel: toText(formData.get("primaryLabel")) || "Explore holidays",
     primaryHref: safeLink(toText(formData.get("primaryHref")), "/tours"),
-    secondaryLabel: toText(formData.get("secondaryLabel")) || "Talk to a specialist",
-    secondaryHref: safeLink(toText(formData.get("secondaryHref")), "/contact"),
+    secondaryLabel: toText(formData.get("secondaryLabel")) || "Plan with AI",
+    secondaryHref: safeLink(toText(formData.get("secondaryHref")), "/plan"),
     galleryTitle: galleryTitle || "Moments from the road",
     gallerySubtitle,
   };
@@ -101,12 +101,15 @@ export async function updateHomepageAction(_prev: HomepageState, formData: FormD
     .filter((image) => image.url.length > 0);
 
   const sections: SiteSections = {
+    offers: bool(formData, "section_offers"),
     featuredTours: bool(formData, "section_featuredTours"),
     services: bool(formData, "section_services"),
     destinations: bool(formData, "section_destinations"),
     gallery: bool(formData, "section_gallery"),
     pilgrimage: bool(formData, "section_pilgrimage"),
+    visas: bool(formData, "section_visas"),
     testimonials: bool(formData, "section_testimonials"),
+    tips: bool(formData, "section_tips"),
     stats: bool(formData, "section_stats"),
     cta: bool(formData, "section_cta"),
   };

@@ -735,13 +735,16 @@ export function HomepageForm({ settings }: { settings: AppSettings }) {
             <div className="grid gap-2.5 sm:grid-cols-2">
               {(
                 [
-                  ["featuredTours", "Featured tours", "Three trip cards under the hero."],
+                  ["offers", "Offers strip", "Value picks and low-season deal cards under the hero."],
+                  ["featuredTours", "Holiday showcase", "Filterable holiday cards built from live tours."],
                   ["stats", "Hero statistics", "Package, hotel, visa and pilgrim counts."],
                   ["gallery", "Gallery", "The image gallery managed below."],
-                  ["services", "Services grid", "Tours, hotels, visas, flights and more."],
+                  ["services", "Services grid", "Flights, hotels, holidays, visa and pilgrimage."],
                   ["destinations", "Destinations", "Destination tiles built from live tours."],
                   ["pilgrimage", "Pilgrimage banner", "Hajj & Umrah promotion block."],
-                  ["testimonials", "Testimonials", "Traveller quotes and promises."],
+                  ["visas", "Visa cards", "Visa products with fees and processing times."],
+                  ["testimonials", "Testimonials", "Traveller quotes, rating and partner strip."],
+                  ["tips", "Travel tips", "Practical before-you-book advice."],
                   ["cta", "Closing call to action", "Final quote prompt at the bottom."],
                 ] as const
               ).map(([key, label, description]) => (

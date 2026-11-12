@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, BedDouble, Check, MapPin, Phone, ShieldCheck, Star, Users, Utensils } from "lucide-react";
-import { getRepository } from "@/lib/db";
+import { getPublicDatabase } from "@/lib/db/public";
 import { gradientFor, destinationInitials } from "@/lib/public";
 import { formatMoney } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const db = await getRepository().getDatabase();
+  const db = await getPublicDatabase();
   const hotel = db.hotels.find((item) => item.slug === slug || item.id === slug);
   if (!hotel) return { title: "Hotel not found" };
   return { title: hotel.name, description: hotel.description.slice(0, 160) };
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function HotelDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const db = await getRepository().getDatabase();
+  const db = await getPublicDatabase();
   const hotel = db.hotels.find((item) => item.slug === slug || item.id === slug);
   if (!hotel) notFound();
 

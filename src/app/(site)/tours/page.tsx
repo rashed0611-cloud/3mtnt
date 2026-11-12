@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Compass, Filter, MapPin, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, Compass, Filter, MapPin, Search, SlidersHorizontal, Users } from "lucide-react";
 import { TourCard } from "@/components/public/tour-card";
 import { Pagination } from "@/components/ui/pagination";
-import { getRepository } from "@/lib/db";
+import { getPublicDatabase } from "@/lib/db/public";
 import { titleCase } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Tour packages",
-  description: "Browse original group, private and fixed-departure tour packages across Asia, the Gulf and Europe.",
+  title: "Holidays",
+  description: "Browse group, private and fixed-departure holidays across Asia, the Gulf and Europe, with clear BDT pricing.",
 };
 
 const PAGE_SIZE = 9;
@@ -16,11 +16,12 @@ const PAGE_SIZE = 9;
 export default async function ToursPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; type?: string; destination?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; type?: string; destination?: string; travellers?: string; page?: string }>;
 }) {
   const params = await searchParams;
-  const db = await getRepository().getDatabase();
+  const db = await getPublicDatabase();
   const term = (params.q ?? "").trim().toLowerCase();
+  const travellers = Math.max(0, Number.parseInt(params.travellers ?? "", 10) || 0);
   const destinations = Array.from(new Set(db.tours.map((tour) => tour.destination))).sort();
   const types = Array.from(new Set(db.tours.map((tour) => tour.type)));
 
@@ -31,6 +32,7 @@ export default async function ToursPage({
       if (term && !haystack.includes(term)) return false;
       if (params.type && tour.type !== params.type) return false;
       if (params.destination && tour.destination !== params.destination) return false;
+      if (travellers && tour.capacity < travellers) return false;
       return true;
     })
     .sort((a, b) => Number(b.featured) - Number(a.featured));
@@ -48,20 +50,20 @@ export default async function ToursPage({
           <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary">Home</Link>
             <span>/</span>
-            <span className="text-slate-600">Tours</span>
+            <span className="text-slate-600">Holidays</span>
           </nav>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
-                <Compass className="h-3 w-3" /> {db.tours.length} original itineraries
+                <Compass className="h-3 w-3" /> {db.tours.length} published holidays
               </span>
-              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">Tour packages</h1>
+              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">Holidays</h1>
               <p className="mt-1.5 max-w-2xl text-[12.5px] leading-6 text-slate-500">
-                Group departures, private journeys and custom routes — all priced transparently and operated by our own travel desk.
+                Group departures, private itineraries and family holidays — priced transparently and operated by our own travel desk.
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[9.5px] uppercase tracking-wide text-slate-400">Journeys from</p>
+              <p className="text-[9.5px] uppercase tracking-wide text-slate-400">Holidays from</p>
               <p className="text-[20px] font-bold text-ink">৳{from.toLocaleString("en-US")}</p>
             </div>
           </div>
@@ -105,7 +107,7 @@ export default async function ToursPage({
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-[12px] text-slate-500">
-            <span className="font-semibold text-ink">{filtered.length}</span> {filtered.length === 1 ? "journey" : "journeys"} match your search
+            <span className="font-semibold text-ink">{filtered.length}</span> {filtered.length === 1 ? "holiday" : "holidays"} match your search
           </p>
           <div className="flex flex-wrap gap-1.5">
             {params.destination ? (
@@ -116,6 +118,11 @@ export default async function ToursPage({
             {params.type ? (
               <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10.5px] font-medium text-slate-600">
                 <Filter className="h-3 w-3" /> {titleCase(params.type)}
+              </span>
+            ) : null}
+            {travellers ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10.5px] font-medium text-slate-600">
+                <Users className="h-3 w-3" /> {travellers} travellers
               </span>
             ) : null}
           </div>
@@ -131,7 +138,7 @@ export default async function ToursPage({
         ) : (
           <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 px-6 py-14 text-center">
             <Compass className="mx-auto h-8 w-8 text-slate-300" />
-            <h2 className="mt-3 text-[15px] font-semibold text-ink">No journeys match those filters</h2>
+            <h2 className="mt-3 text-[15px] font-semibold text-ink">No holidays match those filters</h2>
             <p className="mx-auto mt-1 max-w-sm text-[12px] text-slate-500">
               Try a broader search, or tell us the trip you have in mind and we&apos;ll build it from scratch.
             </p>

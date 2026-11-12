@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/public/site-header";
 import { SiteFooter } from "@/components/public/site-footer";
+import { SupportWidget } from "@/components/public/support-widget";
 import { getSessionUser } from "@/lib/auth";
-import { getRepository } from "@/lib/db";
+import { getPublicDatabase, getPublicSettings } from "@/lib/db/public";
 import { themeStyle, themeStylesheetHref } from "@/lib/theme";
 import type { SiteAnnouncement } from "@/lib/types";
 
@@ -10,7 +11,7 @@ import type { SiteAnnouncement } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getRepository().getSettings();
+  const settings = await getPublicSettings();
   const appearance = settings.appearance;
   const brandName = settings.siteName.replace(/\s*ERP\s*$/i, "");
   const title = appearance.seo.title || `${brandName} — ${settings.tagline}`;
@@ -19,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: {
-      default: title,
+      absolute: title,
       template: `%s · ${brandName}`,
     },
     description,
@@ -47,7 +48,7 @@ function announcementStyle(tone: SiteAnnouncement["tone"]) {
 }
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const [user, db] = await Promise.all([getSessionUser(), getRepository().getDatabase()]);
+  const [user, db] = await Promise.all([getSessionUser(), getPublicDatabase()]);
   const { appearance } = db.settings;
   const brandName = db.settings.siteName.replace(/\s*ERP\s*$/i, "");
   const fontHref = themeStylesheetHref(appearance);
@@ -83,6 +84,7 @@ export default async function PublicLayout({ children }: { children: React.React
       />
       <main>{children}</main>
       <SiteFooter settings={db.settings} />
+      <SupportWidget phone={db.settings.phone} whatsapp={appearance.brand.whatsapp || undefined} />
     </div>
   );
 }

@@ -11,17 +11,8 @@ const inputClass =
   "h-11 w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 text-[12.5px] text-ink outline-none transition placeholder:text-slate-400 focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/10";
 const labelClass = "mb-1.5 block text-[10.5px] font-semibold uppercase tracking-wide text-slate-500";
 
-export interface FlightQuoteSearch {
-  trip: string;
-  from: string;
-  to: string;
-  depart: string;
-  return: string;
-  adults: string;
-  children: string;
-  infants: string;
-  cabin: string;
-}
+/** Hidden search fields, including from2/to2/depart2 for multi-city legs. */
+export type FlightQuoteSearch = Record<string, string>;
 
 export function FlightQuoteForm({
   search,

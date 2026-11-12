@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { FlightQuoteForm } from "@/components/public/flight-quote-form";
 import { FlightSearchForm } from "@/components/public/flight-search-form";
-import { getRepository } from "@/lib/db";
+import { getPublicSettings } from "@/lib/db/public";
 import {
   TRIP_TYPES,
   addDaysISO,
@@ -31,6 +31,7 @@ import {
   nearbyAirports,
   parseFlightSearch,
   passengerSummary,
+  routeDistanceKm,
   routeType,
   selectedBand,
   todayISO,
@@ -59,31 +60,46 @@ function money(value: number) {
 }
 
 function metaFor(query: FlightQuery) {
-  const km = distanceKm(query.from, query.to);
+  const km = routeDistanceKm(query);
+  const legs = Math.max(1, query.legs.length);
   return {
     km,
     minutes: durationMinutes(km),
-    routeType: routeType(km),
+    legs,
+    routeType: routeType(km / legs),
     bands: fareBands(query),
     selected: selectedBand(query),
   };
 }
 
+function stopsFor(query: FlightQuery) {
+  const stops = query.legs.reduce<{ city: string; code: string }[]>((acc, leg) => {
+    if (!acc.length) acc.push({ city: leg.from.city, code: leg.from.code });
+    acc.push({ city: leg.to.city, code: leg.to.code });
+    return acc;
+  }, []);
+  return stops.length > 1 ? stops : [{ city: query.from.city, code: query.from.code }, { city: query.to.city, code: query.to.code }];
+}
+
 export default async function FlightSearchPage({ searchParams }: { searchParams: Promise<FlightSearchParams> }) {
   const params = await searchParams;
-  const settings = await getRepository().getSettings();
+  const settings = await getPublicSettings();
   const started = Boolean(params.depart || params.to || params.from);
   const { query, errors } = parseFlightSearch(params);
 
-  const tripLabel = TRIP_TYPES.find((item) => item.key === query.trip)?.label ?? "One way";
+  const tripLabel = TRIP_TYPES.find((item) => item.key === query.trip)?.label ?? "One-way";
   const cabin = cabinLabel(query.cabin);
+  const stops = stopsFor(query);
+  const routeLabel = stops.map((stop) => `${stop.city} (${stop.code})`).join(" → ");
+  const dateLabel =
+    query.trip === "multi"
+      ? query.legs.map((leg) => formatFlightDate(leg.depart, false)).join(" · ")
+      : `${formatFlightDate(query.depart)}${query.ret ? ` – ${formatFlightDate(query.ret)}` : ""}`;
   const searchSummary = started
-    ? `${tripLabel} · ${query.from.city} (${query.from.code}) → ${query.to.city} (${query.to.code}) · ${formatFlightDate(query.depart)}${
-        query.ret ? ` – ${formatFlightDate(query.ret)}` : ""
-      } · ${passengerSummary(query)} · ${cabin}`
+    ? `${tripLabel} · ${routeLabel} · ${dateLabel} · ${passengerSummary(query)} · ${cabin}`
     : "";
   const meta = metaFor(query);
-  const quoteSearch = {
+  const quoteSearch: Record<string, string> = {
     trip: query.trip,
     from: query.from.code,
     to: query.to.code,
@@ -94,6 +110,11 @@ export default async function FlightSearchPage({ searchParams }: { searchParams:
     infants: String(query.infants),
     cabin: query.cabin,
   };
+  query.legs.slice(1).forEach((leg, index) => {
+    quoteSearch[`from${index + 2}`] = leg.from.code;
+    quoteSearch[`to${index + 2}`] = leg.to.code;
+    quoteSearch[`depart${index + 2}`] = leg.depart;
+  });
   const estimate = `Indicative ${cabin.toLowerCase()} band ${money(meta.selected.perPersonLow)}–${money(meta.selected.perPersonHigh)} per traveller · ${money(meta.selected.totalLow)}–${money(meta.selected.totalHigh)} for the party.`;
   const today = todayISO();
 
@@ -111,12 +132,12 @@ export default async function FlightSearchPage({ searchParams }: { searchParams:
           <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
-                <Search className="h-3 w-3" /> One way or round trip · open to everyone
+                <Search className="h-3 w-3" /> One-way, round trip or multi-city · open to everyone
               </span>
               <h1 className="mt-2 text-[28px] font-bold tracking-tight text-ink sm:text-[34px]">Search flights</h1>
               <p className="mt-1.5 max-w-2xl text-[12.5px] leading-6 text-slate-500">
-                Pick the route and dates, see an indicative fare band straight away, then send the search to our flight desk for live
-                options. No account, no payment and no obligation.
+                Pick one route, add a return, or build a multi-city itinerary. See an indicative fare band straight away, then send the
+                search to our flight desk for live options. No account, no payment and no obligation.
               </p>
             </div>
             <Link
@@ -139,6 +160,11 @@ export default async function FlightSearchPage({ searchParams }: { searchParams:
               children: query.children,
               infants: query.infants,
               cabin: query.cabin,
+              extraLegs: query.legs.slice(1).map((leg) => ({
+                from: leg.from.code,
+                to: leg.to.code,
+                depart: leg.depart,
+              })),
             }}
           />
         </div>
@@ -150,9 +176,10 @@ export default async function FlightSearchPage({ searchParams }: { searchParams:
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
               <h2 className="text-[17px] font-bold text-ink">Start with a route and your dates</h2>
               <p className="mt-1.5 max-w-2xl text-[12px] leading-6 text-slate-500">
-                Choose <span className="font-semibold text-ink">one way</span> for a single flight or{" "}
-                <span className="font-semibold text-ink">round trip</span> to add the return date. We cover short-haul Gulf and Asian
-                routes, pilgrimage flights, and long-haul connections to Europe, North America and Australia.
+                Choose <span className="font-semibold text-ink">one-way</span> for a single flight,{" "}
+                <span className="font-semibold text-ink">round trip</span> to add the return date, or{" "}
+                <span className="font-semibold text-ink">multi-city</span> to join up to three flights. We cover short-haul Gulf and
+                Asian routes, pilgrimage flights, and long-haul connections to Europe, North America and Australia.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {POPULAR_ROUTES.map((route) => {
@@ -200,16 +227,21 @@ export default async function FlightSearchPage({ searchParams }: { searchParams:
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">{tripLabel} search</p>
                     <h2 className="mt-1 flex flex-wrap items-center gap-2 text-[20px] font-bold tracking-tight text-ink">
-                      {query.from.city}
-                      <span className="flex items-center gap-1 text-slate-300">
-                        <span className="h-px w-6 bg-slate-300" />
-                        <Plane className="h-4 w-4 rotate-90 text-primary" />
-                        <span className="h-px w-6 bg-slate-300" />
-                      </span>
-                      {query.to.city}
+                      {stops.map((stop, index) => (
+                        <span key={`${stop.code}-${index}`} className="flex items-center gap-2">
+                          {index > 0 ? (
+                            <span className="flex items-center gap-1 text-slate-300">
+                              <span className="h-px w-5 bg-slate-300" />
+                              <Plane className="h-3.5 w-3.5 rotate-90 text-primary" />
+                              <span className="h-px w-5 bg-slate-300" />
+                            </span>
+                          ) : null}
+                          {stop.city}
+                        </span>
+                      ))}
                     </h2>
                     <p className="mt-1 text-[11.5px] text-slate-500">
-                      {query.from.code} → {query.to.code} · {query.from.country} to {query.to.country}
+                      {stops.map((stop) => stop.code).join(" → ")} · {meta.legs} {meta.legs === 1 ? "flight" : "flights"}
                     </p>
                   </div>
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[10.5px] font-semibold text-emerald-700">
@@ -228,9 +260,15 @@ export default async function FlightSearchPage({ searchParams }: { searchParams:
                   <div className="flex items-start gap-2.5">
                     <CalendarDays className="mt-0.5 h-4 w-4 text-primary" />
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Returning</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                        {query.trip === "multi" ? "Itinerary" : "Returning"}
+                      </p>
                       <p className="mt-0.5 text-[12px] font-semibold text-ink">
-                        {query.ret ? formatFlightDate(query.ret) : "One way"}
+                        {query.trip === "multi"
+                          ? `${query.legs.length} flights · ${formatFlightDate(query.legs[0]?.depart ?? query.depart, false)}`
+                          : query.ret
+                            ? formatFlightDate(query.ret)
+                            : "One-way"}
                       </p>
                     </div>
                   </div>
@@ -247,19 +285,58 @@ export default async function FlightSearchPage({ searchParams }: { searchParams:
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Route</p>
                       <p className="mt-0.5 text-[12px] font-semibold text-ink">{meta.km.toLocaleString("en-US")} km</p>
-                      <p className="text-[10.5px] text-slate-500">≈ {formatDuration(meta.minutes)} non-stop</p>
+                      <p className="text-[10.5px] text-slate-500">
+                        ≈ {formatDuration(meta.minutes)} total flying · {meta.routeType}
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
+
+              {query.trip === "multi" ? (
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                  <div className="border-b border-slate-100 px-5 py-4">
+                    <h2 className="text-[16px] font-bold text-ink">Your itinerary</h2>
+                    <p className="mt-1 text-[11.5px] text-slate-500">
+                      Each flight is priced together. The desk checks connection times, baggage and any overnight stays.
+                    </p>
+                  </div>
+                  <div className="divide-y divide-slate-100">
+                    {query.legs.map((leg, index) => {
+                      const legKm = distanceKm(leg.from, leg.to);
+                      return (
+                        <div key={`${leg.from.code}-${leg.to.code}-${index}`} className="flex flex-wrap items-center gap-3 px-5 py-3.5">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                            {index + 1}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[12.5px] font-semibold text-ink">
+                              {leg.from.city} ({leg.from.code}) → {leg.to.city} ({leg.to.code})
+                            </p>
+                            <p className="mt-0.5 text-[10.5px] text-slate-500">
+                              {formatFlightDate(leg.depart)} · {legKm.toLocaleString("en-US")} km · ≈{" "}
+                              {formatDuration(durationMinutes(legKm))} non-stop
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
 
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
                 <div className="flex flex-wrap items-end justify-between gap-2 px-5 pt-5">
                   <div>
                     <h2 className="text-[16px] font-bold text-ink">Indicative fare bands</h2>
                     <p className="mt-1 text-[11.5px] leading-5 text-slate-500">
-                      A planning range for {query.trip === "round" ? "the return journey" : "the one-way journey"}, per traveller and in
-                      BDT. Confirmed against live inventory before you pay.
+                      A planning range for{" "}
+                      {query.trip === "multi"
+                        ? "the full multi-city journey"
+                        : query.trip === "round"
+                          ? "the return journey"
+                          : "the one-way journey"}
+                      , per traveller and in BDT. Confirmed against live inventory before you pay.
                     </p>
                   </div>
                   <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-500">

@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, CalendarDays, Check, Landmark, MapPin, Moon, Phone, Plane, ShieldCheck, Users } from "lucide-react";
-import { getRepository } from "@/lib/db";
+import { getPublicDatabase } from "@/lib/db/public";
 import { formatDate, formatMoney, percent, titleCase } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const db = await getRepository().getDatabase();
+  const db = await getPublicDatabase();
   const pkg = db.hajjPackages.find((item) => item.id === id);
   if (!pkg) return { title: "Package not found" };
   return { title: pkg.title, description: `${pkg.tier} ${pkg.kind.replace(/_/g, " ")} package departing ${pkg.departureDate}.` };
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function HajjPackageDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const db = await getRepository().getDatabase();
+  const db = await getPublicDatabase();
   const pkg = db.hajjPackages.find((item) => item.id === id);
   if (!pkg) notFound();
 

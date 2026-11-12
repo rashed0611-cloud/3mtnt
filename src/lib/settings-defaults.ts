@@ -3,26 +3,29 @@ import { normalizeHex } from "@/lib/theme";
 import type { AppSettings, GalleryImage, HomepageContent, SiteAppearance, SiteSections } from "@/lib/types";
 
 export const DEFAULT_HOMEPAGE: HomepageContent = {
-  eyebrow: "Original journeys, thoughtfully operated",
-  headline: "Go further. Plan lighter.",
-  highlight: "Travel better.",
+  eyebrow: "Trusted travel planning, end to end",
+  headline: "Discover the",
+  highlight: "Extraordinary",
   subtitle:
-    "3M Tours & Travels designs tours, hotel stays, visa files and pilgrimage packages with the same operations team behind every booking — so the plan you approve is the trip you take.",
-  primaryLabel: "Browse tour packages",
+    "Curated holidays, flight fares, hotel stays, visa files and pilgrimage packages — planned by the same Dhaka team that sees your booking through to the return flight.",
+  primaryLabel: "Explore holidays",
   primaryHref: "/tours",
-  secondaryLabel: "Talk to a specialist",
-  secondaryHref: "/contact",
+  secondaryLabel: "Plan with AI",
+  secondaryHref: "/plan",
   galleryTitle: "Moments from the road",
   gallerySubtitle: "A look at the places, stays and people behind recent 3M journeys.",
 };
 
 export const DEFAULT_SECTIONS: SiteSections = {
+  offers: true,
   featuredTours: true,
   services: true,
   destinations: true,
   gallery: true,
   pilgrimage: true,
+  visas: true,
   testimonials: true,
+  tips: true,
   stats: true,
   cta: true,
 };
@@ -67,9 +70,9 @@ export const DEFAULT_APPEARANCE: SiteAppearance = {
   },
   sections: DEFAULT_SECTIONS,
   seo: {
-    title: "3M Tours & Travels — Journeys worth remembering",
+    title: "3M Tours & Travels — Holidays, flights, hotels and pilgrimage",
     description:
-      "Original tours, hotels, visa services and Hajj & Umrah packages from 3M Tours & Travels. Plan your next journey with a real operations team behind every booking.",
+      "Search holidays, flights, hotel stays, visa services and Hajj & Umrah packages from 3M Tours & Travels. Transparent BDT pricing, confirmed by a real Dhaka travel desk.",
     ogImageUrl: "",
   },
 };
@@ -189,12 +192,15 @@ export function normalizeAppearance(value: Partial<SiteAppearance> | null | unde
       tone: announcement.tone === "dark" || announcement.tone === "light" ? announcement.tone : "brand",
     },
     sections: {
+      offers: bool(sections.offers, true),
       featuredTours: bool(sections.featuredTours, true),
       services: bool(sections.services, true),
       destinations: bool(sections.destinations, true),
       gallery: bool(sections.gallery, true),
       pilgrimage: bool(sections.pilgrimage, true),
+      visas: bool(sections.visas, true),
       testimonials: bool(sections.testimonials, true),
+      tips: bool(sections.tips, true),
       stats: bool(sections.stats, true),
       cta: bool(sections.cta, true),
     },

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getRepository } from "@/lib/db";
+import { getPublicDatabase } from "@/lib/db/public";
 
 function baseUrl() {
   return (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
@@ -7,7 +7,7 @@ function baseUrl() {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = baseUrl();
-  const db = await getRepository().getDatabase();
+  const db = await getPublicDatabase();
   const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -18,6 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/hajj-umrah`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${base}/flights`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/flights/search`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/plan`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/portal`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
   ];
