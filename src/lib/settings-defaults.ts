@@ -12,8 +12,9 @@ export const DEFAULT_HOMEPAGE: HomepageContent = {
   primaryHref: "/tours",
   secondaryLabel: "Plan with AI",
   secondaryHref: "/plan",
-  galleryTitle: "Moments from the road",
-  gallerySubtitle: "A look at the places, stays and people behind recent 3M journeys.",
+  galleryTitle: "Destination inspiration",
+  gallerySubtitle:
+    "A look at the destinations we plan most often — ask the travel desk for recent traveller photos from any itinerary.",
 };
 
 export const DEFAULT_SECTIONS: SiteSections = {
@@ -55,9 +56,9 @@ export const DEFAULT_APPEARANCE: SiteAppearance = {
     radius: 16,
   },
   banner: {
-    imageUrl: "",
-    overlay: 55,
-    align: "left",
+    imageUrl: "/media/hero-maldives-bungalows.jpg",
+    overlay: 50,
+    align: "center",
     height: "standard",
     showSearch: true,
   },
@@ -73,9 +74,53 @@ export const DEFAULT_APPEARANCE: SiteAppearance = {
     title: "3M Tours & Travels — Holidays, flights, hotels and pilgrimage",
     description:
       "Search holidays, flights, hotel stays, visa services and Hajj & Umrah packages from 3M Tours & Travels. Transparent BDT pricing, confirmed by a real Dhaka travel desk.",
-    ogImageUrl: "",
+    ogImageUrl: "/media/hero-maldives-bungalows.jpg",
   },
 };
+
+/**
+ * Default destination gallery. Photos are openly licensed (CC0) stock from
+ * Wikimedia Commons and are stored locally so the storefront still renders a
+ * complete gallery when the database is unavailable.
+ */
+export const DEFAULT_GALLERY: GalleryImage[] = [
+  {
+    id: "gal-bali-sanur",
+    url: "/media/gallery/bali-sanur-beach.jpg",
+    caption: "Bali · Sanur beach pavilion",
+    alt: "A Balinese pavilion on the calm water at Sanur beach, Bali",
+  },
+  {
+    id: "gal-ch-matterhorn",
+    url: "/media/gallery/switzerland-matterhorn.jpg",
+    caption: "Switzerland · Matterhorn at dusk",
+    alt: "The Matterhorn in the Swiss Alps under a pink and violet sunset sky",
+  },
+  {
+    id: "gal-ae-dubai",
+    url: "/media/gallery/dubai-skyline.jpg",
+    caption: "Dubai · Marina skyline at night",
+    alt: "Dubai Marina skyscrapers reflected in the water at night",
+  },
+  {
+    id: "gal-th-bangkok",
+    url: "/media/gallery/bangkok-riverside.jpg",
+    caption: "Bangkok · Riverside after dark",
+    alt: "Bangkok city skyline and river at night under a dark sky",
+  },
+  {
+    id: "gal-bd-coxsbazar",
+    url: "/media/gallery/coxs-bazar-beach.jpg",
+    caption: "Cox's Bazar · Bangladesh coast",
+    alt: "Sun loungers and umbrellas along the wide sandy beach at Cox's Bazar",
+  },
+  {
+    id: "gal-tr-istanbul",
+    url: "/media/gallery/istanbul-skyline.jpg",
+    caption: "Istanbul · Historic peninsula",
+    alt: "Istanbul skyline with mosques and the Bosphorus at golden hour",
+  },
+];
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   siteName: "3M Tours & Travels ERP",
@@ -93,7 +138,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   tourCancellationDays: 7,
   tourDepositPercent: 30,
   homepage: DEFAULT_HOMEPAGE,
-  gallery: [],
+  gallery: DEFAULT_GALLERY,
   appearance: DEFAULT_APPEARANCE,
 };
 
