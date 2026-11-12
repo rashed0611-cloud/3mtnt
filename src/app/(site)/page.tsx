@@ -255,17 +255,30 @@ export default async function HomePage() {
                 holidayDestinations={holidayDestinations}
                 visaCountries={visaCountries}
               />
-              <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10.5px] text-slate-500">
+              <div
+                className={cn(
+                  "mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10.5px]",
+                  hasBanner ? "text-white/80" : "text-slate-500",
+                )}
+              >
                 <span className="inline-flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-500" /> No account needed
+                  <CheckCircle2 className={cn("h-3 w-3", hasBanner ? "text-emerald-300" : "text-emerald-500")} /> No account
+                  needed
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-500" /> Prices in BDT
+                  <CheckCircle2 className={cn("h-3 w-3", hasBanner ? "text-emerald-300" : "text-emerald-500")} /> Prices in BDT
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-500" /> Confirmed by a real desk
+                  <CheckCircle2 className={cn("h-3 w-3", hasBanner ? "text-emerald-300" : "text-emerald-500")} /> Confirmed by a
+                  real desk
                 </span>
-                <Link href="/plan" className="ml-auto inline-flex items-center gap-1 font-semibold text-primary hover:underline">
+                <Link
+                  href="/plan"
+                  className={cn(
+                    "ml-auto inline-flex items-center gap-1 font-semibold hover:underline",
+                    hasBanner ? "text-white" : "text-primary",
+                  )}
+                >
                   Can&apos;t find it? Plan with AI <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>

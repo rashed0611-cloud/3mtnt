@@ -57,7 +57,7 @@ export const DEFAULT_APPEARANCE: SiteAppearance = {
   },
   banner: {
     imageUrl: "/media/hero-maldives-bungalows.jpg",
-    overlay: 50,
+    overlay: 55,
     align: "center",
     height: "standard",
     showSearch: true,
