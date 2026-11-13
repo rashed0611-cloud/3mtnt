@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight, BedDouble, Building2, CalendarDays, Hotel, MapPin, Search, Star, Users } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
 import { getPublicDatabase } from "@/lib/db/public";
-import { listCatalogCovers } from "@/lib/media";
+import { listCatalogCovers, listProductImages } from "@/lib/media";
 import { gradientFor, destinationInitials } from "@/lib/public";
 import { formatMoney } from "@/lib/utils";
 
@@ -30,7 +30,10 @@ export default async function HotelsPage({
 }) {
   const params = await searchParams;
   const db = await getPublicDatabase();
-  const covers = await listCatalogCovers("hotel");
+  const covers = new Map(await listCatalogCovers("hotel"));
+  for (const image of await listProductImages("hotel")) {
+    if (!covers.has(image.entityId)) covers.set(image.entityId, image.url);
+  }
   const term = (params.q ?? "").trim().toLowerCase();
   const locations = Array.from(new Set(db.hotels.map((hotel) => hotel.location))).sort();
   const stay =

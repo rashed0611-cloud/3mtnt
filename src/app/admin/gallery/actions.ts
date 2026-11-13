@@ -8,7 +8,9 @@ import {
   isCatalogKind,
   MEDIA_MODULES,
   removeCatalogCover,
+  removeProductImage,
   uploadCatalogCover,
+  uploadProductImages,
   type CatalogKind,
 } from "@/lib/media";
 import type { ModuleKey } from "@/lib/access";
@@ -79,6 +81,44 @@ export async function removeCatalogCoverAction(_prev: MediaActionState, formData
     return { ok: true, message: "Cover image removed." };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Could not remove the image." };
+  }
+}
+
+export async function uploadProductImagesAction(_prev: MediaActionState, formData: FormData): Promise<MediaActionState> {
+  const kind = readKind(formData);
+  const id = String(formData.get("id") ?? "").trim();
+  if (!kind || !id) return { error: "Save this package once, then add photos." };
+
+  await requireModuleAccess(MODULE_FOR_KIND[kind], "write");
+
+  const files = formData.getAll("files").filter((entry): entry is File => entry instanceof File && entry.size > 0);
+  if (files.length === 0) return { error: "Choose at least one photo to upload." };
+
+  try {
+    await uploadProductImages(kind, id, files);
+    revalidateCatalog(kind);
+    return {
+      ok: true,
+      message: `${files.length} photo${files.length === 1 ? "" : "s"} added.`,
+    };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not upload the photos." };
+  }
+}
+
+export async function removeProductImageAction(_prev: MediaActionState, formData: FormData): Promise<MediaActionState> {
+  const objectPath = String(formData.get("path") ?? "").trim();
+  const kind = objectPath.split("/")[1];
+  if (!isCatalogKind(kind)) return { error: "That photo cannot be removed." };
+
+  await requireModuleAccess(MODULE_FOR_KIND[kind], "write");
+
+  try {
+    await removeProductImage(objectPath);
+    revalidateCatalog(kind);
+    return { ok: true, message: "Photo removed." };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not remove the photo." };
   }
 }
 

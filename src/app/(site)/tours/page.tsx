@@ -4,7 +4,7 @@ import { ArrowRight, Compass, Filter, MapPin, Search, SlidersHorizontal, Users }
 import { TourCard } from "@/components/public/tour-card";
 import { Pagination } from "@/components/ui/pagination";
 import { getPublicDatabase } from "@/lib/db/public";
-import { listCatalogCovers } from "@/lib/media";
+import { listCatalogCovers, listProductImages } from "@/lib/media";
 import { titleCase } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -43,7 +43,10 @@ export default async function ToursPage({
   const current = Math.min(page, totalPages);
   const paged = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
   const from = filtered.length ? Math.min(...filtered.map((tour) => tour.adultPrice)) : 0;
-  const covers = await listCatalogCovers("tour");
+  const covers = new Map(await listCatalogCovers("tour"));
+  for (const image of await listProductImages("tour")) {
+    if (!covers.has(image.entityId)) covers.set(image.entityId, image.url);
+  }
 
   return (
     <>

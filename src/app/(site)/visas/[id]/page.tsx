@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, Check, Clock3, FileCheck2, Globe2, Phone, ShieldCheck, Timer, Wallet } from "lucide-react";
 import { getPublicDatabase } from "@/lib/db/public";
-import { listCatalogCovers } from "@/lib/media";
+import { PhotoStrip } from "@/components/public/photo-strip";
+import { listCatalogCovers, listImagesForProduct } from "@/lib/media";
 import { formatMoney } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -20,6 +21,7 @@ export default async function VisaDetailPage({ params }: { params: Promise<{ id:
   const visa = db.visas.find((item) => item.id === id);
   if (!visa) notFound();
   const coverUrl = (await listCatalogCovers("visa")).get(visa.id);
+  const relatedPhotos = await listImagesForProduct("visa", visa.id);
 
   const interest = encodeURIComponent(`${visa.country} ${visa.visaType} visa`);
   const others = db.visas.filter((item) => item.id !== visa.id && item.status === "active" && item.country === visa.country);
@@ -63,6 +65,8 @@ export default async function VisaDetailPage({ params }: { params: Promise<{ id:
           </div>
         </div>
       </section>
+
+      <PhotoStrip images={relatedPhotos.map((image) => image.url)} />
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[1.5fr_0.9fr]">

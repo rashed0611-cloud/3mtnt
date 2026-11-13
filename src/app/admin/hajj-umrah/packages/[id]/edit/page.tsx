@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { requireUser } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
-import { listCatalogCovers } from "@/lib/media";
+import { listCatalogCovers, listImagesForProduct } from "@/lib/media";
 
 export const metadata: Metadata = { title: "Edit pilgrimage package" };
 
@@ -18,6 +18,7 @@ export default async function EditHajjPackagePage({ params }: { params: Promise<
   const pkg = db.hajjPackages.find((item) => item.id === id);
   if (!pkg) notFound();
   const coverUrl = (await listCatalogCovers("hajj")).get(pkg.id);
+  const relatedImages = await listImagesForProduct("hajj", pkg.id);
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -38,7 +39,7 @@ export default async function EditHajjPackagePage({ params }: { params: Promise<
       />
       <Card>
         <CardContent>
-          <HajjPackageForm pkg={pkg} coverUrl={coverUrl} />
+          <HajjPackageForm pkg={pkg} coverUrl={coverUrl} relatedImages={relatedImages} />
         </CardContent>
       </Card>
     </div>

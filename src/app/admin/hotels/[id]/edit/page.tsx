@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { requireUser } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
-import { listCatalogCovers } from "@/lib/media";
+import { listCatalogCovers, listImagesForProduct } from "@/lib/media";
 
 export const metadata: Metadata = { title: "Edit hotel" };
 
@@ -18,6 +18,7 @@ export default async function EditHotelPage({ params }: { params: Promise<{ id: 
   const hotel = db.hotels.find((item) => item.id === id);
   if (!hotel) notFound();
   const coverUrl = (await listCatalogCovers("hotel")).get(hotel.id);
+  const relatedImages = await listImagesForProduct("hotel", hotel.id);
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -33,7 +34,7 @@ export default async function EditHotelPage({ params }: { params: Promise<{ id: 
       />
       <Card>
         <CardContent>
-          <HotelForm hotel={hotel} coverUrl={coverUrl} />
+          <HotelForm hotel={hotel} coverUrl={coverUrl} relatedImages={relatedImages} />
         </CardContent>
       </Card>
     </div>

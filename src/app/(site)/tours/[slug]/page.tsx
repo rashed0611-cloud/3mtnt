@@ -17,7 +17,8 @@ import {
 } from "lucide-react";
 import { TourCard } from "@/components/public/tour-card";
 import { getPublicDatabase } from "@/lib/db/public";
-import { listCatalogCovers } from "@/lib/media";
+import { PhotoStrip } from "@/components/public/photo-strip";
+import { listCatalogCovers, listImagesForProduct, listProductImages } from "@/lib/media";
 import { gradientFor, destinationInitials } from "@/lib/public";
 import { formatMoney, titleCase } from "@/lib/utils";
 
@@ -38,6 +39,12 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
   const tour = db.tours.find((item) => item.slug === slug || item.id === slug);
   if (!tour) notFound();
   const coverUrl = (await listCatalogCovers("tour")).get(tour.id);
+  const relatedPhotos = await listImagesForProduct("tour", tour.id);
+
+  const catalogImages = new Map(await listCatalogCovers("tour"));
+  for (const image of await listProductImages("tour")) {
+    if (!catalogImages.has(image.entityId)) catalogImages.set(image.entityId, image.url);
+  }
 
   const related = db.tours
     .filter((item) => item.id !== tour.id && item.status === "active" && (item.destination === tour.destination || item.type === tour.type))
@@ -89,6 +96,8 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
           </div>
         </div>
       </section>
+
+      <PhotoStrip images={relatedPhotos.map((image) => image.url)} />
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[1.55fr_0.85fr]">
@@ -241,7 +250,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
               <Link href="/tours" className="text-[11.5px] font-semibold text-primary hover:underline">All tours</Link>
             </div>
             <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {related.map((item) => <TourCard key={item.id} tour={item} />)}
+              {related.map((item) => <TourCard key={item.id} tour={item} coverUrl={catalogImages.get(item.id)} />)}
             </div>
           </div>
         </section>

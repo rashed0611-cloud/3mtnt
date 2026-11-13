@@ -6,10 +6,19 @@ import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { ProductImageField } from "@/components/forms/product-image-field";
+import { ProductGalleryField, type ProductGalleryImage } from "@/components/forms/product-gallery-field";
 import { saveVisaAction, type FormState } from "@/app/admin/actions";
 import type { VisaPackage } from "@/lib/types";
 
-export function VisaForm({ visa, coverUrl }: { visa?: VisaPackage; coverUrl?: string }) {
+export function VisaForm({
+  visa,
+  coverUrl,
+  relatedImages = [],
+}: {
+  visa?: VisaPackage;
+  coverUrl?: string;
+  relatedImages?: ProductGalleryImage[];
+}) {
   const [state, formAction, pending] = useActionState(saveVisaAction, {} as FormState);
   const errors = state.fieldErrors ?? {};
 
@@ -30,6 +39,9 @@ export function VisaForm({ visa, coverUrl }: { visa?: VisaPackage; coverUrl?: st
           url={coverUrl}
           hint="Shown on the visa card and detail page. JPG, PNG, WebP or AVIF up to 4 MB."
         />
+        <div className="border-t border-line pt-3">
+          <ProductGalleryField kind="visa" id={visa?.id} images={relatedImages} />
+        </div>
       </section>
 
       <section className="space-y-4">

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Landmark, MapPin, Moon, Plane, Search, Users } from "lucide-react";
 import { getPublicDatabase } from "@/lib/db/public";
-import { listCatalogCovers } from "@/lib/media";
+import { listCatalogCovers, listProductImages } from "@/lib/media";
 import { formatDate, formatMoney, percent, titleCase } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -17,7 +17,10 @@ export default async function HajjUmrahPage({
 }) {
   const params = await searchParams;
   const db = await getPublicDatabase();
-  const covers = await listCatalogCovers("hajj");
+  const covers = new Map(await listCatalogCovers("hajj"));
+  for (const image of await listProductImages("hajj")) {
+    if (!covers.has(image.entityId)) covers.set(image.entityId, image.url);
+  }
   const term = (params.q ?? "").trim().toLowerCase();
   const today = new Date().toISOString().slice(0, 10);
 

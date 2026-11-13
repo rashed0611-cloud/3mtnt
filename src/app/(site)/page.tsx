@@ -26,7 +26,7 @@ import { TravelSearch } from "@/components/public/travel-search";
 import { TrustStrip } from "@/components/public/trust-strip";
 import { DestinationTile } from "@/components/public/tour-card";
 import { getPublicDatabase } from "@/lib/db/public";
-import { listCatalogCovers } from "@/lib/media";
+import { listCatalogCovers, listProductImages } from "@/lib/media";
 import { cn, formatMoney, titleCase } from "@/lib/utils";
 
 const SERVICES = [
@@ -114,6 +114,9 @@ export default async function HomePage() {
 
   const tours = db.tours.filter((tour) => tour.status === "active");
   const tourCovers = Object.fromEntries(await listCatalogCovers("tour"));
+  for (const image of await listProductImages("tour")) {
+    if (!tourCovers[image.entityId]) tourCovers[image.entityId] = image.url;
+  }
   const visas = db.visas.filter((visa) => visa.status === "active");
   const hotels = db.hotels.filter((hotel) => hotel.status === "publish");
   const today = new Date().toISOString().slice(0, 10);

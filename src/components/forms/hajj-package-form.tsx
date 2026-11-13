@@ -6,10 +6,19 @@ import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { ProductImageField } from "@/components/forms/product-image-field";
+import { ProductGalleryField, type ProductGalleryImage } from "@/components/forms/product-gallery-field";
 import { saveHajjPackageAction, type FormState } from "@/app/admin/actions";
 import type { HajjPackage } from "@/lib/types";
 
-export function HajjPackageForm({ pkg, coverUrl }: { pkg?: HajjPackage; coverUrl?: string }) {
+export function HajjPackageForm({
+  pkg,
+  coverUrl,
+  relatedImages = [],
+}: {
+  pkg?: HajjPackage;
+  coverUrl?: string;
+  relatedImages?: ProductGalleryImage[];
+}) {
   const [state, formAction, pending] = useActionState(saveHajjPackageAction, {} as FormState);
   const errors = state.fieldErrors ?? {};
 
@@ -30,6 +39,9 @@ export function HajjPackageForm({ pkg, coverUrl }: { pkg?: HajjPackage; coverUrl
           url={coverUrl}
           hint="Shown on the pilgrimage card and detail page. JPG, PNG, WebP or AVIF up to 4 MB."
         />
+        <div className="border-t border-line pt-3">
+          <ProductGalleryField kind="hajj" id={pkg?.id} images={relatedImages} />
+        </div>
       </section>
 
       <section className="space-y-4">

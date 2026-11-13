@@ -6,6 +6,7 @@ import { GripVertical, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { ProductImageField } from "@/components/forms/product-image-field";
+import { ProductGalleryField, type ProductGalleryImage } from "@/components/forms/product-gallery-field";
 import { createTourAction, type FormState } from "@/app/admin/actions";
 import type { Tour } from "@/lib/types";
 
@@ -20,10 +21,12 @@ export function TourForm({
   tour,
   defaultStatus = "active",
   coverUrl,
+  relatedImages = [],
 }: {
   tour?: Tour;
   defaultStatus?: Tour["status"];
   coverUrl?: string;
+  relatedImages?: ProductGalleryImage[];
 }) {
   const [state, formAction, pending] = useActionState(createTourAction, {} as FormState);
   const errors = state.fieldErrors ?? {};
@@ -53,6 +56,9 @@ export function TourForm({
 
       <section className="space-y-4 rounded-control border border-line bg-slate-50/40 p-4">
         <ProductImageField kind="tour" id={tour?.id} url={coverUrl} />
+        <div className="border-t border-line pt-3">
+          <ProductGalleryField kind="tour" id={tour?.id} images={relatedImages} />
+        </div>
       </section>
 
       <section className="space-y-4">

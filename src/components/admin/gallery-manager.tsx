@@ -27,7 +27,7 @@ export interface GalleryItem {
   name: string;
   url: string;
   folder: string;
-  group: "catalog" | "site";
+  group: "catalog" | "product" | "site";
   kind?: MediaKind;
   entityId?: string;
   size: number;
@@ -37,10 +37,12 @@ export interface GalleryItem {
 
 const FILTERS = [
   { key: "all", label: "All images" },
-  { key: "tour", label: "Tour covers" },
-  { key: "hotel", label: "Hotel covers" },
-  { key: "visa", label: "Visa covers" },
-  { key: "hajj", label: "Hajj covers" },
+  { key: "cover", label: "Covers" },
+  { key: "related", label: "Related photos" },
+  { key: "tour", label: "Tours" },
+  { key: "hotel", label: "Hotels" },
+  { key: "visa", label: "Visas" },
+  { key: "hajj", label: "Hajj" },
   { key: "site", label: "Site media" },
 ] as const;
 
@@ -51,6 +53,13 @@ const KIND_LABEL: Record<MediaKind, string> = {
   hotel: "Hotel cover",
   visa: "Visa cover",
   hajj: "Hajj cover",
+};
+
+const PHOTO_LABEL: Record<MediaKind, string> = {
+  tour: "Tour photo",
+  hotel: "Hotel photo",
+  visa: "Visa photo",
+  hajj: "Hajj photo",
 };
 
 function formatBytes(bytes: number) {
@@ -95,7 +104,9 @@ export function GalleryManager({ items, canManage }: { items: GalleryItem[]; can
     const needle = term.trim().toLowerCase();
     return items.filter((item) => {
       if (filter === "site" && item.group !== "site") return false;
-      if (filter !== "all" && filter !== "site" && item.kind !== filter) return false;
+      if (filter === "cover" && item.group !== "catalog") return false;
+      if (filter === "related" && item.group !== "product") return false;
+      if (filter !== "all" && !["site", "cover", "related"].includes(filter) && item.kind !== filter) return false;
       if (!needle) return true;
       return [item.name, item.path, item.usedBy, item.kind].filter(Boolean).join(" ").toLowerCase().includes(needle);
     });
@@ -221,7 +232,7 @@ export function GalleryManager({ items, canManage }: { items: GalleryItem[]; can
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={item.url} alt={item.usedBy ?? item.name} className="h-full w-full object-cover" loading="lazy" />
                   <span className="absolute left-2 top-2 rounded-full bg-slate-900/70 px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-wide text-white backdrop-blur">
-                    {item.kind ? KIND_LABEL[item.kind] : "Site media"}
+                    {item.kind ? (item.group === "product" ? PHOTO_LABEL[item.kind] : KIND_LABEL[item.kind]) : "Site media"}
                   </span>
                 </div>
 

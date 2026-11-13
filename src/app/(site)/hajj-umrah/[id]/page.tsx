@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, CalendarDays, Check, Landmark, MapPin, Moon, Phone, Plane, ShieldCheck, Users } from "lucide-react";
 import { getPublicDatabase } from "@/lib/db/public";
-import { listCatalogCovers } from "@/lib/media";
+import { PhotoStrip } from "@/components/public/photo-strip";
+import { listCatalogCovers, listImagesForProduct } from "@/lib/media";
 import { formatDate, formatMoney, percent, titleCase } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -20,6 +21,7 @@ export default async function HajjPackageDetailPage({ params }: { params: Promis
   const pkg = db.hajjPackages.find((item) => item.id === id);
   if (!pkg) notFound();
   const coverUrl = (await listCatalogCovers("hajj")).get(pkg.id);
+  const relatedPhotos = await listImagesForProduct("hajj", pkg.id);
 
   const used = percent(pkg.booked, pkg.capacity);
   const remaining = Math.max(0, pkg.capacity - pkg.booked);
@@ -78,6 +80,8 @@ export default async function HajjPackageDetailPage({ params }: { params: Promis
           </div>
         </div>
       </section>
+
+      <PhotoStrip images={relatedPhotos.map((image) => image.url)} />
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[1.5fr_0.9fr]">

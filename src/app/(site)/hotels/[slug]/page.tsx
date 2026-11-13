@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, BedDouble, Check, MapPin, Phone, ShieldCheck, Star, Users, Utensils } from "lucide-react";
 import { getPublicDatabase } from "@/lib/db/public";
-import { listCatalogCovers } from "@/lib/media";
+import { PhotoStrip } from "@/components/public/photo-strip";
+import { listCatalogCovers, listImagesForProduct } from "@/lib/media";
 import { gradientFor, destinationInitials } from "@/lib/public";
 import { formatMoney } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ export default async function HotelDetailPage({ params }: { params: Promise<{ sl
   const hotel = db.hotels.find((item) => item.slug === slug || item.id === slug);
   if (!hotel) notFound();
   const coverUrl = (await listCatalogCovers("hotel")).get(hotel.id);
+  const relatedPhotos = await listImagesForProduct("hotel", hotel.id);
 
   const related = db.hotels.filter((item) => item.id !== hotel.id && item.status === "publish" && item.location === hotel.location).slice(0, 3);
   const interest = encodeURIComponent(`${hotel.name}, ${hotel.location}`);
@@ -61,6 +63,8 @@ export default async function HotelDetailPage({ params }: { params: Promise<{ sl
           </div>
         </div>
       </section>
+
+      <PhotoStrip images={relatedPhotos.map((image) => image.url)} />
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[1.5fr_0.9fr]">

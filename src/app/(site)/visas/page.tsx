@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock3, FileCheck2, FileSearch, Globe2, Search, Wallet } from "lucide-react";
 import { getPublicDatabase } from "@/lib/db/public";
-import { listCatalogCovers } from "@/lib/media";
+import { listCatalogCovers, listProductImages } from "@/lib/media";
 import { formatMoney } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -17,7 +17,10 @@ export default async function VisasPage({
 }) {
   const params = await searchParams;
   const db = await getPublicDatabase();
-  const covers = await listCatalogCovers("visa");
+  const covers = new Map(await listCatalogCovers("visa"));
+  for (const image of await listProductImages("visa")) {
+    if (!covers.has(image.entityId)) covers.set(image.entityId, image.url);
+  }
   const term = (params.q ?? "").trim().toLowerCase();
   const countries = Array.from(new Set(db.visas.map((visa) => visa.country))).sort();
 

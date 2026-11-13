@@ -1,5 +1,6 @@
 import "server-only";
 
+import crypto from "node:crypto";
 import { promises as fs } from "fs";
 import path from "path";
 import { cache } from "react";
@@ -19,6 +20,9 @@ export type SiteFolder = (typeof SITE_FOLDERS)[number];
 /** Product catalogues that can carry a cover image. */
 export const CATALOG_KINDS = ["tour", "hotel", "visa", "hajj"] as const;
 export type CatalogKind = (typeof CATALOG_KINDS)[number];
+
+/** Related photos live at `catalog-media/<kind>/<productId>__<uuid>.<ext>`. */
+export const PRODUCT_IMAGES_FOLDER = "catalog-media";
 
 const EXTENSIONS = new Map<string, string>([
   ["image/jpeg", "jpg"],
@@ -84,7 +88,7 @@ export const listCatalogCovers = cache(async (kind: CatalogKind): Promise<Map<st
       const { data, error } = await admin.storage.from(MEDIA_BUCKET).list(`catalog/${kind}`, { limit: 1000 });
       if (error) return covers;
       for (const object of data ?? []) {
-        if (!object.name || object.name.startsWith(".")) continue;
+        if (!object.name || object.name.startsWith(".") || !object.id) continue;
         const id = object.name.replace(/\.[^.]+$/, "");
         covers.set(id, supabasePublicUrl(`catalog/${kind}/${object.name}`));
       }
@@ -154,6 +158,144 @@ export async function removeCatalogCover(kind: CatalogKind, id: string) {
   }
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Related product photos                                              */
+/* ------------------------------------------------------------------ */
+
+export interface ProductImage {
+  /** `<folder>/<name>`, used for deletes. */
+  path: string;
+  name: string;
+  url: string;
+  /** Owning catalogue record. */
+  entityId: string;
+  size: number;
+  updatedAt?: string;
+}
+
+/** All related photos for a catalogue, newest first. Cached per request. */
+export const listProductImages = cache(async (kind: CatalogKind): Promise<ProductImage[]> => {
+  const images: ProductImage[] = [];
+
+  if (isSupabaseConfigured()) {
+    try {
+      const admin = await ensureBucket();
+      const { data, error } = await admin.storage
+        .from(MEDIA_BUCKET)
+        .list(`${PRODUCT_IMAGES_FOLDER}/${kind}`, { limit: 1000 });
+      if (error) return images;
+      for (const object of data ?? []) {
+        if (!object.name || object.name.startsWith(".") || !object.id) continue;
+        const entityId = object.name.split("__")[0];
+        if (!entityId) continue;
+        const objectPath = `${PRODUCT_IMAGES_FOLDER}/${kind}/${object.name}`;
+        images.push({
+          path: objectPath,
+          name: object.name,
+          url: supabasePublicUrl(objectPath),
+          entityId,
+          size: formatBytesToNumber((object.metadata as Record<string, unknown> | null)?.size),
+          updatedAt: object.updated_at ?? undefined,
+        });
+      }
+    } catch {
+      return images;
+    }
+    return images.sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""));
+  }
+
+  try {
+    const directory = localDirectory(PRODUCT_IMAGES_FOLDER, kind);
+    for (const name of await fs.readdir(directory)) {
+      if (name.startsWith(".") || !name.includes("__")) continue;
+      const stat = await fs.stat(path.join(directory, name)).catch(() => null);
+      const entityId = name.split("__")[0];
+      images.push({
+        path: `${PRODUCT_IMAGES_FOLDER}/${kind}/${name}`,
+        name,
+        url: `/uploads/${PRODUCT_IMAGES_FOLDER}/${kind}/${name}`,
+        entityId,
+        size: stat?.size ?? 0,
+        updatedAt: stat?.mtime.toISOString(),
+      });
+    }
+  } catch {
+    /* No related photos yet. */
+  }
+
+  return images.sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""));
+});
+
+/** Related photos that belong to one catalogue record. */
+export async function listImagesForProduct(kind: CatalogKind, id: string): Promise<ProductImage[]> {
+  return (await listProductImages(kind)).filter((image) => image.entityId === id);
+}
+
+export async function uploadProductImages(kind: CatalogKind, id: string, files: File[]): Promise<ProductImage[]> {
+  if (!files.length) throw new Error("Choose at least one image to upload.");
+  const uploaded: ProductImage[] = [];
+
+  for (const file of files) {
+    const extension = validateFile(file);
+    const name = `${id}__${crypto.randomUUID()}.${extension}`;
+    const objectPath = `${PRODUCT_IMAGES_FOLDER}/${kind}/${name}`;
+
+    if (isSupabaseConfigured()) {
+      const admin = await ensureBucket();
+      const { error } = await admin.storage.from(MEDIA_BUCKET).upload(objectPath, file, {
+        contentType: file.type,
+        upsert: false,
+        cacheControl: "60",
+      });
+      if (error) throw new Error(`Could not upload the image: ${error.message}`);
+      uploaded.push({
+        path: objectPath,
+        name,
+        url: supabasePublicUrl(objectPath),
+        entityId: id,
+        size: file.size,
+      });
+      continue;
+    }
+
+    const directory = localDirectory(PRODUCT_IMAGES_FOLDER, kind);
+    await fs.mkdir(directory, { recursive: true });
+    await fs.writeFile(path.join(directory, name), Buffer.from(await file.arrayBuffer()));
+    uploaded.push({
+      path: objectPath,
+      name,
+      url: `/uploads/${objectPath}`,
+      entityId: id,
+      size: file.size,
+    });
+  }
+
+  return uploaded;
+}
+
+export async function removeProductImage(objectPath: string) {
+  const segments = objectPath.split("/");
+  if (
+    segments.length !== 3 ||
+    segments[0] !== PRODUCT_IMAGES_FOLDER ||
+    !isCatalogKind(segments[1]) ||
+    !segments[2].includes("__") ||
+    segments[2].includes("..")
+  ) {
+    throw new Error("That image cannot be removed from here.");
+  }
+
+  if (isSupabaseConfigured()) {
+    const admin = await ensureBucket();
+    const { error } = await admin.storage.from(MEDIA_BUCKET).remove([objectPath]);
+    if (error) throw new Error(`Could not remove the image: ${error.message}`);
+    return;
+  }
+
+  await fs.unlink(localDirectory(...segments)).catch(() => undefined);
+}
+
 /* ------------------------------------------------------------------ */
 /* Media library                                                       */
 /* ------------------------------------------------------------------ */
@@ -164,8 +306,8 @@ export interface MediaItem {
   name: string;
   url: string;
   folder: string;
-  /** "Product cover" or "Site media". */
-  group: "catalog" | "site";
+  /** "catalog" = cover, "product" = related photo, "site" = website media. */
+  group: "catalog" | "product" | "site";
   kind?: CatalogKind;
   /** Catalog product id, when the item is a cover. */
   entityId?: string;
@@ -244,6 +386,26 @@ export const listMediaLibrary = cache(async (): Promise<MediaItem[]> => {
     }
   }
 
+  for (const kind of CATALOG_KINDS) {
+    const folder = `${PRODUCT_IMAGES_FOLDER}/${kind}`;
+    const rows = configured ? await listSupabaseFolder(folder) : await listLocalFolder(PRODUCT_IMAGES_FOLDER, kind);
+    for (const row of rows) {
+      if (!row.name.includes("__")) continue;
+      const objectPath = `${folder}/${row.name}`;
+      items.push({
+        path: objectPath,
+        name: row.name,
+        url: configured ? supabasePublicUrl(objectPath) : `/uploads/${objectPath}`,
+        folder,
+        group: "product",
+        kind,
+        entityId: row.name.split("__")[0],
+        size: row.size,
+        updatedAt: row.updatedAt,
+      });
+    }
+  }
+
   return items.sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""));
 });
 
@@ -252,6 +414,9 @@ export function isDeletableMediaPath(objectPath: string) {
   const segments = objectPath.split("/");
   if (segments.some((segment) => !segment || segment.includes("..") || segment.startsWith("."))) return false;
   if (segments.length === 2) return isSiteFolder(segments[0]);
+  if (segments.length === 3 && segments[0] === PRODUCT_IMAGES_FOLDER) {
+    return isCatalogKind(segments[1]) && segments[2].includes("__");
+  }
   if (segments.length === 3) return segments[0] === "catalog" && isCatalogKind(segments[1]);
   return false;
 }

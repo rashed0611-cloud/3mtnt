@@ -43,6 +43,7 @@ export default async function GalleryPage() {
   }));
 
   const covers = gallery.filter((item) => item.group === "catalog").length;
+  const related = gallery.filter((item) => item.group === "product").length;
   const totalBytes = gallery.reduce((sum, item) => sum + item.size, 0);
   const role = normalizeRole(user.role);
   const canManage = MEDIA_MODULES.some((module) => canWriteModule(role, module));
@@ -56,9 +57,9 @@ export default async function GalleryPage() {
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Images stored" value={String(gallery.length)} hint="Across covers and site media" icon={Images} tone="blue" />
+        <StatCard label="Images stored" value={String(gallery.length)} hint="Covers, related photos and site media" icon={Images} tone="blue" />
         <StatCard label="Product covers" value={String(covers)} hint="Tours, hotels, visas and Hajj" icon={Package} tone="violet" />
-        <StatCard label="Site media" value={String(gallery.length - covers)} hint="Banners, logos and gallery" icon={ImageIcon} tone="amber" />
+        <StatCard label="Related photos" value={String(related)} hint="Product photo strips" icon={ImageIcon} tone="amber" />
         <StatCard label="Storage used" value={formatBytes(totalBytes)} hint="Supabase Storage" icon={HardDrive} tone="slate" />
       </div>
 
