@@ -122,7 +122,7 @@ export default async function ToursPage({
                   {paged.map((tour) => (
                     <tr key={tour.id}>
                       <td>
-                        <Link href={`/admin/tours/${tour.id}`} className="group flex items-center gap-2.5">
+                        <Link href={`/admin/tours/${tour.id}/edit`} className="group flex items-center gap-2.5">
                           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-gradient-to-br from-primary/15 to-primary/5 text-primary">
                             <Globe2 className="h-4 w-4" />
                           </span>
@@ -144,14 +144,14 @@ export default async function ToursPage({
                       <td className="max-w-[150px] truncate text-[11.5px] text-slate-600">{tour.supplier}</td>
                       <td className="whitespace-nowrap text-[11px] text-muted">{formatDate(tour.createdAt, { day: "2-digit", month: "short", year: "numeric" })}</td>
                       <td className="text-right"><StatusBadge status={tour.status} /></td>
-                        <td className="text-right">
-                          <Link
-                            href={`/admin/tours/${tour.id}/edit`}
-                            className="inline-flex items-center gap-1 rounded-control border border-line bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
-                          >
-                            <Pencil className="h-3 w-3" /> Edit
-                          </Link>
-                        </td>
+                      <td className="text-right">
+                        <Link
+                          href={`/admin/tours/${tour.id}/edit`}
+                          className="inline-flex items-center gap-1 rounded-control border border-line bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
+                        >
+                          <Pencil className="h-3 w-3" /> Edit
+                        </Link>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
