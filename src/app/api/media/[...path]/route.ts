@@ -4,6 +4,11 @@ import { isDeletableMediaPath, MEDIA_BUCKET } from "@/lib/media";
 import { createSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
+// Always read the current object: a deleted or replaced cover must not be
+// served from a stale server cache. HTTP/CDN caching is set on the response.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 const CONTENT_TYPES: Record<string, string> = {
   jpg: "image/jpeg",
@@ -47,7 +52,7 @@ function imageResponse(body: Buffer, contentType: string, name: string) {
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const { path: segments } = await params;
-  const objectPath = (segments ?? []).map((segment) => decodeURIComponent(segment)).join("/");
+  const objectPath = (segments ?? []).join("/");
 
   if (!objectPath || !isDeletableMediaPath(objectPath)) {
     return new Response("Not found", { status: 404 });
