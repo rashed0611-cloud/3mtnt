@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, Check, Clock3, FileCheck2, Globe2, Phone, ShieldCheck, Timer, Wallet } from "lucide-react";
 import { getPublicDatabase } from "@/lib/db/public";
+import { fallbackImage } from "@/lib/fallback-image";
 import { PhotoStrip } from "@/components/public/photo-strip";
 import { listCatalogCovers, listImagesForProduct } from "@/lib/media";
 import { formatMoney } from "@/lib/utils";
@@ -21,6 +22,7 @@ export default async function VisaDetailPage({ params }: { params: Promise<{ id:
   const visa = db.visas.find((item) => item.id === id);
   if (!visa) notFound();
   const coverUrl = (await listCatalogCovers("visa")).get(visa.id);
+  const heroImage = coverUrl || fallbackImage(visa.country, visa.visaType);
   const relatedPhotos = await listImagesForProduct("visa", visa.id);
 
   const interest = encodeURIComponent(`${visa.country} ${visa.visaType} visa`);
@@ -40,12 +42,8 @@ export default async function VisaDetailPage({ params }: { params: Promise<{ id:
           <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-start gap-3">
               <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-amber-100 text-amber-600">
-                {coverUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={coverUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <Globe2 className="h-7 w-7" />
-                )}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={heroImage} alt="" className="h-full w-full object-cover" />
               </span>
               <div>
                 <div className="flex flex-wrap items-center gap-2">

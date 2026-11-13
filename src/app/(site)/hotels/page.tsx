@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, BedDouble, Building2, CalendarDays, Hotel, MapPin, Search, Star, Users } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
 import { getPublicDatabase } from "@/lib/db/public";
+import { fallbackImage } from "@/lib/fallback-image";
 import { listCatalogCovers, listProductImages } from "@/lib/media";
 import { gradientFor, destinationInitials } from "@/lib/public";
 import { formatMoney } from "@/lib/utils";
@@ -134,19 +135,15 @@ export default async function HotelsPage({
         {paged.length ? (
           <>
             <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {paged.map((hotel) => (
+              {paged.map((hotel) => {
+                const image = covers.get(hotel.id) || fallbackImage(hotel.location, hotel.name);
+                return (
                 <article key={hotel.id} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
                   <Link href={`/hotels/${hotel.slug}`} className="block">
                     <div className={`relative flex h-40 items-end bg-gradient-to-br ${gradientFor(hotel.location)} p-4`}>
-                      {covers.get(hotel.id) ? (
-                        <>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={covers.get(hotel.id)} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/25 to-slate-950/5" />
-                        </>
-                      ) : (
-                        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_30%_30%,white_1px,transparent_1px)] [background-size:18px_18px]" />
-                      )}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/25 to-slate-950/5" />
                       <div className="absolute right-3 top-3 flex items-center gap-0.5 rounded-full bg-white/15 px-2 py-1 text-[9.5px] font-semibold text-white backdrop-blur">
                         {Array.from({ length: hotel.starRating }).map((_, index) => (
                           <Star key={index} className="h-2.5 w-2.5 fill-amber-300 text-amber-300" />
@@ -186,7 +183,8 @@ export default async function HotelsPage({
                     </div>
                   </div>
                 </article>
-              ))}
+                );
+              })}
             </div>
             <Pagination page={current} pageSize={PAGE_SIZE} total={filtered.length} params={params} basePath="/hotels" />
           </>
