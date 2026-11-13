@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ImageIcon, Images, Loader2, Trash2, Upload, X } from "lucide-react";
-import {
-  removeProductImageAction,
-  uploadProductImagesAction,
-  type MediaActionState,
-} from "@/app/admin/gallery/actions";
+import { ExternalLink, Images, Loader2, Plus, X } from "lucide-react";
+import { removeProductImageAction, type MediaActionState } from "@/app/admin/gallery/actions";
+import { galleryUploadHref } from "@/lib/media-links";
 
 type CatalogKind = "tour" | "hotel" | "visa" | "hajj";
 
@@ -17,8 +15,9 @@ export interface ProductGalleryImage {
 }
 
 /**
- * Related-photo editor for a catalogue record. Rendered inside the product
- * form, so it uses buttons and direct server actions instead of nested forms.
+ * Related-photo editor for a catalogue record. New photos are uploaded in the
+ * Image Gallery; this field links there, previews the attached photos and can
+ * remove them. Removal applies immediately.
  */
 export function ProductGalleryField({
   kind,
@@ -30,36 +29,28 @@ export function ProductGalleryField({
   images: ProductGalleryImage[];
 }) {
   const router = useRouter();
-  const fileInput = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState(images);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const awaitingGallery = useRef(false);
 
   useEffect(() => {
     setItems(images);
   }, [images]);
 
-  function runUpload(files: FileList) {
-    setError(null);
-    setMessage(null);
-    const formData = new FormData();
-    formData.set("kind", kind);
-    formData.set("id", id ?? "");
-    for (const file of Array.from(files)) formData.append("files", file);
-
-    startTransition(async () => {
-      const result: MediaActionState = await uploadProductImagesAction({}, formData);
-      if (result.error) {
-        setError(result.error);
-        return;
-      }
-      setMessage(result.message ?? "Photos added.");
-      if (fileInput.current) fileInput.current.value = "";
+  // Photos are uploaded in another tab, so refresh when this form is focused
+  // again to show what the gallery just attached.
+  useEffect(() => {
+    function onFocus() {
+      if (!awaitingGallery.current) return;
+      awaitingGallery.current = false;
       router.refresh();
-    });
-  }
+    }
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [router]);
 
   function runRemove(path: string) {
     setError(null);
@@ -88,7 +79,7 @@ export function ProductGalleryField({
         <div>
           <p className="text-[11.5px] font-medium text-slate-700">Related photos</p>
           <p className="text-[10.5px] leading-4 text-slate-500">
-            Shown in the photo strip on the public page. JPG, PNG, WebP or AVIF up to 4 MB each.
+            Shown in the photo strip on the public page. Add them in the Image Gallery.
           </p>
         </div>
         {!disabled ? (
@@ -146,30 +137,26 @@ export function ProductGalleryField({
               );
             })}
 
-            <button
-              type="button"
-              onClick={() => fileInput.current?.click()}
-              disabled={pending}
-              className="flex aspect-[4/3] flex-col items-center justify-center gap-1 rounded-control border border-dashed border-line bg-slate-50 text-slate-500 transition hover:border-primary/40 hover:text-primary disabled:opacity-60"
+            <Link
+              href={galleryUploadHref(kind, id, "related")}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => {
+                awaitingGallery.current = true;
+              }}
+              className="flex aspect-[4/3] flex-col items-center justify-center gap-1 rounded-control border border-dashed border-primary/40 bg-primary/5 text-primary transition hover:border-primary hover:bg-primary/10"
             >
-              {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
-              <span className="text-[10px] font-semibold">{pending ? "Uploading…" : "Add photos"}</span>
-            </button>
+              <Plus className="h-4 w-4" />
+              <span className="text-[10px] font-semibold">Add photos</span>
+              <span className="inline-flex items-center gap-1 text-[9px] font-medium text-primary/70">
+                Image Gallery <ExternalLink className="h-2.5 w-2.5" />
+              </span>
+            </Link>
           </div>
 
-          <input
-            ref={fileInput}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/avif"
-            multiple
-            className="sr-only"
-            onChange={(event) => {
-              if (event.currentTarget.files?.length) runUpload(event.currentTarget.files);
-            }}
-          />
-
-          <p className="flex items-center gap-1 text-[10px] text-muted">
-            <Upload className="h-3 w-3" /> Upload several photos at once. The cover image above is shown first on cards.
+          <p className="text-[10px] leading-4 text-muted">
+            Opens the Image Gallery in a new tab, so unsaved changes here stay put. Upload several photos at once and the
+            gallery attaches them to this package. The cover image above is shown first on cards.
           </p>
         </>
       )}

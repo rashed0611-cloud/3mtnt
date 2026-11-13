@@ -6,10 +6,17 @@ import { StatCard } from "@/components/ui/stat-card";
 import { canWriteModule, normalizeRole } from "@/lib/access";
 import { requireModuleAccess } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
-import { listMediaLibrary, MEDIA_MODULES } from "@/lib/media";
+import { isCatalogKind, listMediaLibrary, MEDIA_MODULES, type CatalogKind } from "@/lib/media";
 import { toMediaDisplayUrl } from "@/lib/media-url";
 
 export const metadata: Metadata = { title: "Image gallery" };
+
+const EDIT_HREF: Record<CatalogKind, (id: string) => string> = {
+  tour: (id) => `/admin/tours/${id}/edit`,
+  hotel: (id) => `/admin/hotels/${id}/edit`,
+  visa: (id) => `/admin/visas/${id}/edit`,
+  hajj: (id) => `/admin/hajj-umrah/packages/${id}/edit`,
+};
 
 function formatBytes(bytes: number) {
   if (!bytes) return "0 KB";
@@ -17,7 +24,12 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default async function GalleryPage() {
+export default async function GalleryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ package?: string; slot?: string }>;
+}) {
+  const params = await searchParams;
   const user = await requireModuleAccess(MEDIA_MODULES, "view");
   const [items, db] = await Promise.all([listMediaLibrary(), getRepository().getDatabase()]);
 
@@ -26,6 +38,20 @@ export default async function GalleryPage() {
   for (const hotel of db.hotels) productNames.set(`hotel:${hotel.id}`, hotel.name);
   for (const visa of db.visas) productNames.set(`visa:${visa.id}`, `${visa.country} ${visa.visaType}`);
   for (const pkg of db.hajjPackages) productNames.set(`hajj:${pkg.id}`, pkg.title);
+
+  // When the page is opened from a package edit screen, uploads are attached
+  // to that package instead of the general gallery.
+  const [kind, id] = (params.package ?? "").split(":");
+  const target =
+    isCatalogKind(kind) && id && productNames.has(`${kind}:${id}`)
+      ? {
+          kind,
+          id,
+          name: productNames.get(`${kind}:${id}`) ?? id,
+          slot: params.slot === "related" ? ("related" as const) : ("cover" as const),
+          editHref: EDIT_HREF[kind](id),
+        }
+      : undefined;
 
   // Where a site image is currently used, so deleting it is an informed choice.
   // Stored settings keep absolute Supabase URLs, so normalise them to the
@@ -66,7 +92,7 @@ export default async function GalleryPage() {
         <StatCard label="Storage used" value={formatBytes(totalBytes)} hint="Supabase Storage" icon={HardDrive} tone="slate" />
       </div>
 
-      <GalleryManager items={gallery} canManage={canManage} />
+      <GalleryManager items={gallery} canManage={canManage} target={target} />
     </div>
   );
 }

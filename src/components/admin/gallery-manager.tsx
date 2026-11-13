@@ -1,8 +1,10 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  ArrowLeft,
   Check,
   Copy,
   ImageIcon,
@@ -15,13 +17,23 @@ import {
 } from "lucide-react";
 import {
   deleteMediaAction,
+  uploadCatalogCoverAction,
   uploadGalleryImagesAction,
+  uploadProductImagesAction,
   type MediaActionState,
 } from "@/app/admin/gallery/actions";
 import { toAbsoluteMediaUrl } from "@/lib/media-url";
 import { cn } from "@/lib/utils";
 
 type MediaKind = "tour" | "hotel" | "visa" | "hajj";
+
+export interface GalleryTarget {
+  kind: MediaKind;
+  id: string;
+  name: string;
+  slot: "cover" | "related";
+  editHref: string;
+}
 
 export interface GalleryItem {
   path: string;
@@ -77,9 +89,19 @@ function formatDate(value?: string) {
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
-export function GalleryManager({ items, canManage }: { items: GalleryItem[]; canManage: boolean }) {
+export function GalleryManager({
+  items,
+  canManage,
+  target,
+}: {
+  items: GalleryItem[];
+  canManage: boolean;
+  target?: GalleryTarget;
+}) {
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
+  const coverInput = useRef<HTMLInputElement>(null);
+  const relatedInput = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState<FilterKey>("all");
   const [term, setTerm] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
@@ -87,6 +109,9 @@ export function GalleryManager({ items, canManage }: { items: GalleryItem[]; can
   const [deleting, startDelete] = useTransition();
   const [uploadState, uploadAction, uploading] = useActionState(uploadGalleryImagesAction, {} as MediaActionState);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [attachError, setAttachError] = useState<string | null>(null);
+  const [attachMessage, setAttachMessage] = useState<string | null>(null);
+  const [attaching, startAttach] = useTransition();
 
   useEffect(() => {
     if (uploadState.ok) {
@@ -122,6 +147,50 @@ export function GalleryManager({ items, canManage }: { items: GalleryItem[]; can
     }
   }
 
+  function uploadCover(files: FileList) {
+    if (!target) return;
+    const file = files[0];
+    if (!file) return;
+    setAttachError(null);
+    setAttachMessage(null);
+    const formData = new FormData();
+    formData.set("kind", target.kind);
+    formData.set("id", target.id);
+    formData.set("file", file);
+
+    startAttach(async () => {
+      const result: MediaActionState = await uploadCatalogCoverAction({}, formData);
+      if (result.error) {
+        setAttachError(result.error);
+        return;
+      }
+      setAttachMessage(result.message ?? "Cover image saved.");
+      if (coverInput.current) coverInput.current.value = "";
+      router.refresh();
+    });
+  }
+
+  function uploadRelated(files: FileList) {
+    if (!target || !files.length) return;
+    setAttachError(null);
+    setAttachMessage(null);
+    const formData = new FormData();
+    formData.set("kind", target.kind);
+    formData.set("id", target.id);
+    for (const file of Array.from(files)) formData.append("files", file);
+
+    startAttach(async () => {
+      const result: MediaActionState = await uploadProductImagesAction({}, formData);
+      if (result.error) {
+        setAttachError(result.error);
+        return;
+      }
+      setAttachMessage(result.message ?? "Photos added.");
+      if (relatedInput.current) relatedInput.current.value = "";
+      router.refresh();
+    });
+  }
+
   function remove(item: GalleryItem) {
     setDeleteError(null);
     startDelete(async () => {
@@ -137,7 +206,91 @@ export function GalleryManager({ items, canManage }: { items: GalleryItem[]; can
 
   return (
     <div className="space-y-4">
-      {canManage ? (
+      {target ? (
+        <div className="card-surface space-y-3 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[13px] font-semibold text-ink">Adding images for {target.name}</p>
+              <p className="text-[11px] leading-5 text-muted">
+                Upload a cover or related photos here. They are attached to this package immediately and also appear in the gallery below.
+              </p>
+            </div>
+            <Link
+              href={target.editHref}
+              className="inline-flex items-center gap-1.5 rounded-control border border-line bg-white px-3 py-2 text-[11.5px] font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> Back to package
+            </Link>
+          </div>
+
+          {canManage ? (
+            <>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => coverInput.current?.click()}
+                  disabled={attaching}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-control px-3 py-2 text-[11.5px] font-semibold transition disabled:opacity-60",
+                    target.slot === "cover" ? "bg-primary text-white hover:bg-primary/90" : "border border-line bg-white text-slate-600 hover:border-primary/30 hover:text-primary",
+                  )}
+                >
+                  {attaching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} Upload cover
+                </button>
+                <button
+                  type="button"
+                  onClick={() => relatedInput.current?.click()}
+                  disabled={attaching}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-control px-3 py-2 text-[11.5px] font-semibold transition disabled:opacity-60",
+                    target.slot === "related" ? "bg-primary text-white hover:bg-primary/90" : "border border-line bg-white text-slate-600 hover:border-primary/30 hover:text-primary",
+                  )}
+                >
+                  {attaching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Images className="h-3.5 w-3.5" />} Add related photos
+                </button>
+              </div>
+              <input
+                ref={coverInput}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                className="sr-only"
+                onChange={(event) => {
+                  if (event.currentTarget.files?.length) uploadCover(event.currentTarget.files);
+                }}
+              />
+              <input
+                ref={relatedInput}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                multiple
+                className="sr-only"
+                onChange={(event) => {
+                  if (event.currentTarget.files?.length) uploadRelated(event.currentTarget.files);
+                }}
+              />
+            </>
+          ) : (
+            <p className="rounded-control border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-5 text-amber-900">
+              Your role can view this package but not change its images.
+            </p>
+          )}
+
+          {attachError ? (
+            <p role="alert" className="rounded-control border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-medium text-red-700">
+              {attachError}
+            </p>
+          ) : attachMessage ? (
+            <p className="text-[11px] font-medium text-emerald-600">
+              {attachMessage}{" "}
+              <Link href={target.editHref} className="font-semibold underline underline-offset-2">
+                Back to package
+              </Link>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {canManage && !target ? (
         <div className="card-surface p-4">
           <form action={uploadAction} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
