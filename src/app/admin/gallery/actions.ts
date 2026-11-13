@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireModuleAccess } from "@/lib/auth";
 import { uploadSiteImage } from "@/lib/gallery-upload";
 import {
+  copyMediaToProduct,
   deleteMediaObject,
   isCatalogKind,
   MEDIA_MODULES,
@@ -103,6 +104,26 @@ export async function uploadProductImagesAction(_prev: MediaActionState, formDat
     };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Could not upload the photos." };
+  }
+}
+
+/** Reuse an existing gallery image as a package cover or related photo. */
+export async function useLibraryImageAction(_prev: MediaActionState, formData: FormData): Promise<MediaActionState> {
+  const kind = readKind(formData);
+  const id = String(formData.get("id") ?? "").trim();
+  const objectPath = String(formData.get("path") ?? "").trim();
+  const slot = formData.get("slot") === "related" ? "related" : "cover";
+  if (!kind || !id) return { error: "Save this package once, then choose its images." };
+  if (!objectPath) return { error: "Choose an image from the gallery." };
+
+  await requireModuleAccess(MODULE_FOR_KIND[kind], "write");
+
+  try {
+    await copyMediaToProduct(kind, id, objectPath, slot);
+    revalidateCatalog(kind);
+    return { ok: true, message: slot === "cover" ? "Cover image updated." : "Photo added." };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not use that image." };
   }
 }
 

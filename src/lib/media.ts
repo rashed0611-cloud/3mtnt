@@ -31,6 +31,8 @@ const EXTENSIONS = new Map<string, string>([
   ["image/avif", "avif"],
 ]);
 
+const MIME_BY_EXTENSION = new Map(Array.from(EXTENSIONS, ([mime, extension]) => [extension, mime]));
+
 export function isCatalogKind(value: unknown): value is CatalogKind {
   return typeof value === "string" && (CATALOG_KINDS as readonly string[]).includes(value);
 }
@@ -277,6 +279,54 @@ export async function uploadProductImages(kind: CatalogKind, id: string, files: 
   }
 
   return uploaded;
+}
+
+/** Read any stored image back so it can be reused for another product. */
+async function downloadMediaObject(objectPath: string): Promise<{ bytes: Buffer; contentType: string }> {
+  if (isSupabaseConfigured()) {
+    const admin = await ensureBucket();
+    const { data, error } = await admin.storage.from(MEDIA_BUCKET).download(objectPath);
+    if (error || !data) throw new Error(`Could not read that image: ${error?.message ?? "not found"}`);
+    return {
+      bytes: Buffer.from(await data.arrayBuffer()),
+      contentType: data.type || MIME_BY_EXTENSION.get(objectPath.split(".").pop()?.toLowerCase() ?? "") || "application/octet-stream",
+    };
+  }
+
+  const segments = objectPath.split("/");
+  const bytes = await fs.readFile(localDirectory(...segments)).catch(() => null);
+  if (!bytes) throw new Error("That image is no longer available.");
+  return {
+    bytes,
+    contentType: MIME_BY_EXTENSION.get(objectPath.split(".").pop()?.toLowerCase() ?? "") ?? "application/octet-stream",
+  };
+}
+
+/**
+ * Reuse an image that already lives in the gallery: copy it into the product's
+ * cover slot or its related-photo folder. The original gallery image is kept.
+ */
+export async function copyMediaToProduct(
+  kind: CatalogKind,
+  id: string,
+  sourcePath: string,
+  slot: "cover" | "related",
+) {
+  if (!isDeletableMediaPath(sourcePath)) throw new Error("That image cannot be used here.");
+
+  const { bytes, contentType } = await downloadMediaObject(sourcePath);
+  const extension = EXTENSIONS.get(contentType) ?? sourcePath.split(".").pop()?.toLowerCase() ?? "";
+  const mime = MIME_BY_EXTENSION.get(extension);
+  if (!mime) throw new Error("Use a JPG, PNG, WebP or AVIF image.");
+
+  const name = sourcePath.split("/").pop() ?? `image.${extension}`;
+  const file = new File([bytes], name, { type: mime });
+
+  if (slot === "cover") {
+    await uploadCatalogCover(kind, id, file);
+    return;
+  }
+  await uploadProductImages(kind, id, [file]);
 }
 
 export async function removeProductImage(objectPath: string) {

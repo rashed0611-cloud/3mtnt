@@ -20,6 +20,7 @@ import {
   uploadCatalogCoverAction,
   uploadGalleryImagesAction,
   uploadProductImagesAction,
+  useLibraryImageAction,
   type MediaActionState,
 } from "@/app/admin/gallery/actions";
 import { toAbsoluteMediaUrl } from "@/lib/media-url";
@@ -191,6 +192,27 @@ export function GalleryManager({
     });
   }
 
+  function useImage(item: GalleryItem) {
+    if (!target) return;
+    setAttachError(null);
+    setAttachMessage(null);
+    const formData = new FormData();
+    formData.set("kind", target.kind);
+    formData.set("id", target.id);
+    formData.set("path", item.path);
+    formData.set("slot", target.slot);
+
+    startAttach(async () => {
+      const result: MediaActionState = await useLibraryImageAction({}, formData);
+      if (result.error) {
+        setAttachError(result.error);
+        return;
+      }
+      setAttachMessage(result.message ?? "Image added to the package.");
+      router.refresh();
+    });
+  }
+
   function remove(item: GalleryItem) {
     setDeleteError(null);
     startDelete(async () => {
@@ -212,7 +234,8 @@ export function GalleryManager({
             <div>
               <p className="text-[13px] font-semibold text-ink">Adding images for {target.name}</p>
               <p className="text-[11px] leading-5 text-muted">
-                Upload a cover or related photos here. They are attached to this package immediately and also appear in the gallery below.
+                Choose an image below to display on this package, or upload a new one. Images are attached to this package
+                immediately and stay in the gallery.
               </p>
             </div>
             <Link
@@ -228,26 +251,15 @@ export function GalleryManager({
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={() => coverInput.current?.click()}
+                  onClick={() => (target.slot === "cover" ? coverInput : relatedInput).current?.click()}
                   disabled={attaching}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-control px-3 py-2 text-[11.5px] font-semibold transition disabled:opacity-60",
-                    target.slot === "cover" ? "bg-primary text-white hover:bg-primary/90" : "border border-line bg-white text-slate-600 hover:border-primary/30 hover:text-primary",
-                  )}
+                  className="inline-flex items-center gap-1.5 rounded-control bg-primary px-3 py-2 text-[11.5px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
                 >
-                  {attaching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} Upload cover
+                  {attaching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} Upload new image
                 </button>
-                <button
-                  type="button"
-                  onClick={() => relatedInput.current?.click()}
-                  disabled={attaching}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-control px-3 py-2 text-[11.5px] font-semibold transition disabled:opacity-60",
-                    target.slot === "related" ? "bg-primary text-white hover:bg-primary/90" : "border border-line bg-white text-slate-600 hover:border-primary/30 hover:text-primary",
-                  )}
-                >
-                  {attaching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Images className="h-3.5 w-3.5" />} Add related photos
-                </button>
+                <span className="inline-flex items-center gap-1.5 rounded-control border border-line bg-white px-3 py-2 text-[11px] font-medium text-slate-500">
+                  <Images className="h-3.5 w-3.5" /> Or pick one from the gallery below
+                </span>
               </div>
               <input
                 ref={coverInput}
@@ -380,6 +392,11 @@ export function GalleryManager({
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((item) => {
             const isConfirming = confirming === item.path;
+            const isTargetImage =
+              target &&
+              item.kind === target.kind &&
+              item.entityId === target.id &&
+              (target.slot === "cover" ? item.group === "catalog" : item.group === "product");
             return (
               <article key={item.path} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div className="relative aspect-[4/3] bg-slate-100">
@@ -388,6 +405,11 @@ export function GalleryManager({
                   <span className="absolute left-2 top-2 rounded-full bg-slate-900/70 px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-wide text-white backdrop-blur">
                     {item.kind ? (item.group === "product" ? PHOTO_LABEL[item.kind] : KIND_LABEL[item.kind]) : "Site media"}
                   </span>
+                  {isTargetImage ? (
+                    <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[9.5px] font-semibold text-white">
+                      <Check className="h-2.5 w-2.5" /> In this package
+                    </span>
+                  ) : null}
                 </div>
 
                 <div className="space-y-2 p-3">
@@ -402,6 +424,24 @@ export function GalleryManager({
                     <span>{formatBytes(item.size)}</span>
                     <span>{formatDate(item.updatedAt)}</span>
                   </div>
+
+                  {target && canManage ? (
+                    <button
+                      type="button"
+                      onClick={() => useImage(item)}
+                      disabled={attaching}
+                      className="inline-flex w-full items-center justify-center gap-1 rounded-control bg-primary px-2 py-1.5 text-[10.5px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
+                    >
+                      {attaching ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : target.slot === "cover" ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <Images className="h-3 w-3" />
+                      )}
+                      {target.slot === "cover" ? "Use as cover" : "Add to package"}
+                    </button>
+                  ) : null}
 
                   <div className="flex gap-1.5 pt-0.5">
                     <button
