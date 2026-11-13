@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, Check, Clock3, FileCheck2, Globe2, Phone, ShieldCheck, Timer, Wallet } from "lucide-react";
+import { ArrowRight, Check, Clock3, FileCheck2, Phone, ShieldCheck, Timer, Wallet } from "lucide-react";
 import { getPublicDatabase } from "@/lib/db/public";
 import { fallbackImage } from "@/lib/fallback-image";
 import { PhotoStrip } from "@/components/public/photo-strip";
@@ -30,35 +30,32 @@ export default async function VisaDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <>
-      <section className="border-b border-slate-200 bg-gradient-to-b from-[#fff8ed] to-white">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <nav className="flex flex-wrap items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
-            <Link href="/" className="hover:text-primary">Home</Link>
+      <section className="relative overflow-hidden bg-gradient-to-br from-amber-700 via-amber-600 to-amber-500 text-white">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/60 to-slate-950/25" />
+        <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+          <nav className="flex flex-wrap items-center gap-1.5 text-[10.5px] text-white/60" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-white">Home</Link>
             <span>/</span>
-            <Link href="/visas" className="hover:text-primary">Visa</Link>
+            <Link href="/visas" className="hover:text-white">Visa</Link>
             <span>/</span>
-            <span className="text-slate-600">{visa.country}</span>
+            <span className="text-white/90">{visa.country}</span>
           </nav>
           <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-amber-100 text-amber-600">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={heroImage} alt="" className="h-full w-full object-cover" />
-              </span>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-700">{visa.visaType}</span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
-                    <Check className="h-2.5 w-2.5" /> Accepting applications
-                  </span>
-                </div>
-                <h1 className="mt-1.5 text-[28px] font-bold leading-tight tracking-tight text-ink sm:text-[34px]">{visa.country} visa</h1>
-                <p className="mt-1 max-w-xl text-[12px] leading-6 text-slate-500">{visa.description}</p>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur">{visa.visaType}</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-300/90 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-950">
+                  <Check className="h-2.5 w-2.5" /> Accepting applications
+                </span>
               </div>
+              <h1 className="mt-3 max-w-3xl text-[30px] font-bold leading-tight tracking-tight text-white sm:text-[40px]">{visa.country} visa</h1>
+              <p className="mt-2 max-w-xl text-[12px] leading-6 text-white/85">{visa.description}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-              <p className="text-[9.5px] uppercase tracking-wide text-slate-400">Service fee</p>
-              <p className="text-[20px] font-bold text-ink">{formatMoney(visa.price, "BDT", 0)}</p>
+            <div className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur">
+              <p className="text-[9.5px] uppercase tracking-wide text-white/70">Service fee</p>
+              <p className="text-[20px] font-bold text-white">{formatMoney(visa.price, "BDT", 0)}</p>
             </div>
           </div>
         </div>
