@@ -299,6 +299,7 @@ export interface SiteAnnouncement {
 }
 
 export interface SiteSections {
+  partners: boolean;
   offers: boolean;
   featuredTours: boolean;
   services: boolean;

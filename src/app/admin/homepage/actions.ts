@@ -101,6 +101,7 @@ export async function updateHomepageAction(_prev: HomepageState, formData: FormD
     .filter((image) => image.url.length > 0);
 
   const sections: SiteSections = {
+    partners: bool(formData, "section_partners"),
     offers: bool(formData, "section_offers"),
     featuredTours: bool(formData, "section_featuredTours"),
     services: bool(formData, "section_services"),

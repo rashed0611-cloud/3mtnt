@@ -18,6 +18,7 @@ export const DEFAULT_HOMEPAGE: HomepageContent = {
 };
 
 export const DEFAULT_SECTIONS: SiteSections = {
+  partners: true,
   offers: true,
   featuredTours: true,
   services: true,
@@ -237,6 +238,7 @@ export function normalizeAppearance(value: Partial<SiteAppearance> | null | unde
       tone: announcement.tone === "dark" || announcement.tone === "light" ? announcement.tone : "brand",
     },
     sections: {
+      partners: bool(sections.partners, true),
       offers: bool(sections.offers, true),
       featuredTours: bool(sections.featuredTours, true),
       services: bool(sections.services, true),

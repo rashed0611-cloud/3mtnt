@@ -735,6 +735,7 @@ export function HomepageForm({ settings }: { settings: AppSettings }) {
             <div className="grid gap-2.5 sm:grid-cols-2">
               {(
                 [
+                  ["partners", "Trust strip", "Reviewer rating and supplier partner marks under the hero."],
                   ["offers", "Offers strip", "Value picks and low-season deal cards under the hero."],
                   ["featuredTours", "Holiday showcase", "Filterable holiday cards built from live tours."],
                   ["stats", "Hero statistics", "Package, hotel, visa and pilgrim counts."],
@@ -743,7 +744,7 @@ export function HomepageForm({ settings }: { settings: AppSettings }) {
                   ["destinations", "Destinations", "Destination tiles built from live tours."],
                   ["pilgrimage", "Pilgrimage banner", "Hajj & Umrah promotion block."],
                   ["visas", "Visa cards", "Visa products with fees and processing times."],
-                  ["testimonials", "Testimonials", "Traveller quotes, rating and partner strip."],
+                  ["testimonials", "Testimonials", "Traveller quotes and the post-trip rating."],
                   ["tips", "Travel tips", "Practical before-you-book advice."],
                   ["cta", "Closing call to action", "Final quote prompt at the bottom."],
                 ] as const

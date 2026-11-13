@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { HolidayShowcase } from "@/components/public/holiday-showcase";
 import { TravelSearch } from "@/components/public/travel-search";
+import { TrustStrip } from "@/components/public/trust-strip";
 import { DestinationTile } from "@/components/public/tour-card";
 import { getPublicDatabase } from "@/lib/db/public";
 import { cn, formatMoney, titleCase } from "@/lib/utils";
@@ -134,7 +135,11 @@ export default async function HomePage() {
     .sort((a, b) => a.departureDate.localeCompare(b.departureDate))[0];
 
   const partners = Array.from(
-    new Set([...tours.map((tour) => tour.supplier), ...hotels.map((hotel) => hotel.supplier)].filter(Boolean)),
+    new Set(
+      [...tours.map((tour) => tour.supplier), ...hotels.map((hotel) => hotel.supplier)].filter(
+        (supplier) => supplier && supplier.toLowerCase() !== "own inventory",
+      ),
+    ),
   ).slice(0, 8);
 
   const visaCountries = Array.from(new Set(visas.map((visa) => visa.country))).sort();
@@ -324,6 +329,14 @@ export default async function HomePage() {
           </div>
         ) : null}
       </section>
+
+      {sections.partners && partners.length ? (
+        <TrustStrip
+          partners={partners}
+          rating="4.9"
+          summary={`${partners.length} partner agencies · ${destinationMap.size} destinations · ${tours.length} published holidays`}
+        />
+      ) : null}
 
       {/* Offers */}
       {sections.offers && valuePicks.length ? (
@@ -608,21 +621,6 @@ export default async function HomePage() {
                 ))}
               </div>
             </div>
-
-            {partners.length ? (
-              <div className="mt-8 border-t border-emerald-900/10 pt-5">
-                <p className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-900/50">
-                  Our {partners.length} supplier partners on the ground
-                </p>
-                <div className="mt-3 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-                  {partners.map((partner) => (
-                    <span key={partner} className="text-[11.5px] font-semibold tracking-tight text-emerald-900/45">
-                      {partner}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
           </div>
         </section>
       ) : null}
