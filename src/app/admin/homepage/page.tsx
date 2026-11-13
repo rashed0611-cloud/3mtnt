@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { requireModuleAccess } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
 import { FONT_OPTIONS } from "@/lib/fonts";
+import { toMediaDisplayUrl } from "@/lib/media-url";
 
 export const metadata: Metadata = { title: "Website editor" };
 
@@ -114,7 +115,7 @@ export default async function HomepageEditorPage() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   key={image.id}
-                  src={image.url}
+                  src={toMediaDisplayUrl(image.url)}
                   alt={image.alt || image.caption || "Gallery image"}
                   className="h-20 w-full rounded-control border border-line object-cover"
                 />

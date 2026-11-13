@@ -18,6 +18,7 @@ import {
   uploadGalleryImagesAction,
   type MediaActionState,
 } from "@/app/admin/gallery/actions";
+import { toAbsoluteMediaUrl } from "@/lib/media-url";
 import { cn } from "@/lib/utils";
 
 type MediaKind = "tour" | "hotel" | "visa" | "hajj";
@@ -114,7 +115,7 @@ export function GalleryManager({ items, canManage }: { items: GalleryItem[]; can
 
   async function copyUrl(item: GalleryItem) {
     try {
-      await navigator.clipboard.writeText(item.url);
+      await navigator.clipboard.writeText(toAbsoluteMediaUrl(item.url));
       setCopied(item.path);
     } catch {
       setCopied(null);

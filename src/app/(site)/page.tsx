@@ -27,6 +27,7 @@ import { TrustStrip } from "@/components/public/trust-strip";
 import { DestinationTile } from "@/components/public/tour-card";
 import { getPublicDatabase } from "@/lib/db/public";
 import { listCatalogCovers, listProductImages } from "@/lib/media";
+import { toMediaDisplayUrl } from "@/lib/media-url";
 import { cn, formatMoney, titleCase } from "@/lib/utils";
 
 const SERVICES = [
@@ -109,7 +110,8 @@ export default async function HomePage() {
   const appearance = settings.appearance;
   const sections = appearance.sections;
   const banner = appearance.banner;
-  const hasBanner = Boolean(banner.imageUrl);
+  const bannerImage = toMediaDisplayUrl(banner.imageUrl);
+  const hasBanner = Boolean(bannerImage);
   const centered = banner.align === "center" || !hasBanner;
 
   const tours = db.tours.filter((tour) => tour.status === "active");
@@ -218,7 +220,7 @@ export default async function HomePage() {
         {hasBanner ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={banner.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={bannerImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0" style={{ background: `rgba(15, 23, 42, ${banner.overlay / 100})` }} />
           </>
         ) : (
@@ -645,7 +647,7 @@ export default async function HomePage() {
               <figure key={image.id} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={image.url}
+                  src={toMediaDisplayUrl(image.url)}
                   alt={image.alt || image.caption || "3M Tours & Travels journey"}
                   loading="lazy"
                   className="h-56 w-full object-cover transition duration-500 group-hover:scale-[1.03]"

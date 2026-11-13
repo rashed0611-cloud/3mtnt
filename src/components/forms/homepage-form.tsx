@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { updateHomepageAction, type HomepageState } from "@/app/admin/homepage/actions";
 import { FONT_OPTIONS, fontStack } from "@/lib/fonts";
+import { toMediaDisplayUrl } from "@/lib/media-url";
 import { DEFAULT_APPEARANCE } from "@/lib/settings-defaults";
 import { prefersLightText, themeStyle } from "@/lib/theme";
 import type { AppSettings, GalleryImage, SiteAppearance } from "@/lib/types";
@@ -118,7 +119,7 @@ function ImagePicker({
         <div className={cn("relative shrink-0 overflow-hidden rounded-control border border-line bg-slate-50", previewClassName)}>
           {local || value ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={local || value} alt="" className="h-full w-full object-contain p-1" />
+            <img src={local || toMediaDisplayUrl(value)} alt="" className="h-full w-full object-contain p-1" />
           ) : (
             <span className="flex h-full items-center justify-center text-slate-300">
               <ImageIcon className="h-5 w-5" />
@@ -386,7 +387,7 @@ export function HomepageForm({ settings }: { settings: AppSettings }) {
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-control border border-line bg-slate-50">
                       {appearance.brand.faviconUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={appearance.brand.faviconUrl} alt="" className="h-6 w-6 object-contain" />
+                        <img src={toMediaDisplayUrl(appearance.brand.faviconUrl)} alt="" className="h-6 w-6 object-contain" />
                       ) : (
                         <ImageIcon className="h-4 w-4 text-slate-300" />
                       )}
@@ -787,7 +788,7 @@ export function HomepageForm({ settings }: { settings: AppSettings }) {
                   <div className="relative h-[80px] overflow-hidden rounded-control border border-line bg-white">
                     {row.url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={row.url} alt={row.alt || row.caption || `Gallery image ${index + 1}`} className="h-full w-full object-cover" />
+                      <img src={toMediaDisplayUrl(row.url)} alt={row.alt || row.caption || `Gallery image ${index + 1}`} className="h-full w-full object-cover" />
                     ) : (
                       <span className="flex h-full items-center justify-center text-slate-300">
                         <ImagePlus className="h-5 w-5" />
@@ -965,7 +966,7 @@ export function HomepageForm({ settings }: { settings: AppSettings }) {
                 <div className="flex items-center gap-1.5">
                   {appearance.brand.logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={appearance.brand.logoUrl} alt="" className="h-6 w-auto max-w-[90px] object-contain" />
+                    <img src={toMediaDisplayUrl(appearance.brand.logoUrl)} alt="" className="h-6 w-auto max-w-[90px] object-contain" />
                   ) : (
                     <span
                       className="flex h-6 w-6 items-center justify-center rounded-md text-[9px] font-bold text-white"
@@ -1001,7 +1002,7 @@ export function HomepageForm({ settings }: { settings: AppSettings }) {
                 {banner.imageUrl ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={banner.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                    <img src={toMediaDisplayUrl(banner.imageUrl)} alt="" className="absolute inset-0 h-full w-full object-cover" />
                     <div className="absolute inset-0" style={{ background: `rgba(15, 23, 42, ${banner.overlay / 100})` }} />
                   </>
                 ) : null}

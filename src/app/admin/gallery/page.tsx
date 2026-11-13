@@ -7,6 +7,7 @@ import { canWriteModule, normalizeRole } from "@/lib/access";
 import { requireModuleAccess } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
 import { listMediaLibrary, MEDIA_MODULES } from "@/lib/media";
+import { toMediaDisplayUrl } from "@/lib/media-url";
 
 export const metadata: Metadata = { title: "Image gallery" };
 
@@ -27,12 +28,14 @@ export default async function GalleryPage() {
   for (const pkg of db.hajjPackages) productNames.set(`hajj:${pkg.id}`, pkg.title);
 
   // Where a site image is currently used, so deleting it is an informed choice.
+  // Stored settings keep absolute Supabase URLs, so normalise them to the
+  // same proxy paths the library items use.
   const siteUsage = new Map<string, string>();
   const appearance = db.settings.appearance;
-  if (appearance.banner.imageUrl) siteUsage.set(appearance.banner.imageUrl, "Homepage banner");
-  if (appearance.brand.logoUrl) siteUsage.set(appearance.brand.logoUrl, "Site logo");
-  if (appearance.brand.faviconUrl) siteUsage.set(appearance.brand.faviconUrl, "Browser icon");
-  for (const image of db.settings.gallery) siteUsage.set(image.url, "Homepage gallery");
+  if (appearance.banner.imageUrl) siteUsage.set(toMediaDisplayUrl(appearance.banner.imageUrl), "Homepage banner");
+  if (appearance.brand.logoUrl) siteUsage.set(toMediaDisplayUrl(appearance.brand.logoUrl), "Site logo");
+  if (appearance.brand.faviconUrl) siteUsage.set(toMediaDisplayUrl(appearance.brand.faviconUrl), "Browser icon");
+  for (const image of db.settings.gallery) siteUsage.set(toMediaDisplayUrl(image.url), "Homepage gallery");
 
   const gallery = items.map((item) => ({
     ...item,

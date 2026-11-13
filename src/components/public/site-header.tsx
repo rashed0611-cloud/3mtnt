@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, Compass, Menu, Sparkles, X } from "lucide-react";
 import { LanguageMenu } from "@/components/public/language-menu";
+import { toMediaDisplayUrl } from "@/lib/media-url";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
@@ -44,7 +45,7 @@ export function SiteHeader({
         <Link href="/" className="flex items-center gap-2.5" aria-label={`${siteName} home`}>
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt={siteName} className="h-10 w-auto max-w-[170px] object-contain" />
+            <img src={toMediaDisplayUrl(logoUrl)} alt={siteName} className="h-10 w-auto max-w-[170px] object-contain" />
           ) : (
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-strong text-white shadow-sm">
               {logoText ? <span className="text-[11px] font-bold tracking-tight">{logoText}</span> : <Compass className="h-5 w-5" />}

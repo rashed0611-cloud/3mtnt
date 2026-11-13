@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Compass, Facebook, Instagram, Linkedin, Mail, MapPin, MessageCircle, Phone, Youtube } from "lucide-react";
+import { toMediaDisplayUrl } from "@/lib/media-url";
 import type { AppSettings } from "@/lib/types";
 
 const COLUMNS = [
@@ -52,7 +53,7 @@ export function SiteFooter({ settings }: { settings: AppSettings }) {
             <div className="flex items-center gap-2.5">
               {appearance.brand.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={appearance.brand.logoUrl} alt={brandName} className="h-10 w-auto max-w-[170px] object-contain" />
+                <img src={toMediaDisplayUrl(appearance.brand.logoUrl)} alt={brandName} className="h-10 w-auto max-w-[170px] object-contain" />
               ) : (
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white">
                   {settings.logoText ? <span className="text-[11px] font-bold">{settings.logoText}</span> : <Compass className="h-5 w-5" />}

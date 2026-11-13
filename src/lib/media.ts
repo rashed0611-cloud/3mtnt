@@ -61,9 +61,14 @@ async function ensureBucket() {
   return admin;
 }
 
+/**
+ * Public images are served through the site's own `/api/media` route rather
+ * than straight from Supabase. That keeps them on the same origin as the page,
+ * avoids third-party cookie/cache behaviour on phones and gives the CDN a
+ * stable cacheable URL.
+ */
 function supabasePublicUrl(objectPath: string) {
-  const admin = createSupabaseAdminClient();
-  return admin.storage.from(MEDIA_BUCKET).getPublicUrl(objectPath).data.publicUrl;
+  return `/api/media/${objectPath}`;
 }
 
 function localDirectory(...segments: string[]) {
