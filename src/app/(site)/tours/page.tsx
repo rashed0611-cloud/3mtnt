@@ -4,6 +4,7 @@ import { ArrowRight, Compass, Filter, MapPin, Search, SlidersHorizontal, Users }
 import { TourCard } from "@/components/public/tour-card";
 import { Pagination } from "@/components/ui/pagination";
 import { getPublicDatabase } from "@/lib/db/public";
+import { listCatalogCovers } from "@/lib/media";
 import { titleCase } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -42,6 +43,7 @@ export default async function ToursPage({
   const current = Math.min(page, totalPages);
   const paged = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
   const from = filtered.length ? Math.min(...filtered.map((tour) => tour.adultPrice)) : 0;
+  const covers = await listCatalogCovers("tour");
 
   return (
     <>
@@ -131,7 +133,7 @@ export default async function ToursPage({
         {paged.length ? (
           <>
             <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {paged.map((tour) => <TourCard key={tour.id} tour={tour} />)}
+              {paged.map((tour) => <TourCard key={tour.id} tour={tour} coverUrl={covers.get(tour.id)} />)}
             </div>
             <Pagination page={current} pageSize={PAGE_SIZE} total={filtered.length} params={params} basePath="/tours" />
           </>

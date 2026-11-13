@@ -5,6 +5,7 @@ import Link from "next/link";
 import { GripVertical, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
+import { ProductImageField } from "@/components/forms/product-image-field";
 import { createTourAction, type FormState } from "@/app/admin/actions";
 import type { Tour } from "@/lib/types";
 
@@ -15,7 +16,15 @@ interface Day {
 
 const DESTINATIONS = ["Bali", "Maldives", "Switzerland", "Dubai", "Bangkok", "Thailand", "Singapore", "Malaysia", "Turkey", "Japan", "Cox's Bazar", "Sylhet"];
 
-export function TourForm({ tour, defaultStatus = "active" }: { tour?: Tour; defaultStatus?: Tour["status"] }) {
+export function TourForm({
+  tour,
+  defaultStatus = "active",
+  coverUrl,
+}: {
+  tour?: Tour;
+  defaultStatus?: Tour["status"];
+  coverUrl?: string;
+}) {
   const [state, formAction, pending] = useActionState(createTourAction, {} as FormState);
   const errors = state.fieldErrors ?? {};
   const [days, setDays] = useState<Day[]>(
@@ -41,6 +50,10 @@ export function TourForm({ tour, defaultStatus = "active" }: { tour?: Tour; defa
       ) : null}
 
       {tour ? <input type="hidden" name="id" value={tour.id} /> : null}
+
+      <section className="space-y-4 rounded-control border border-line bg-slate-50/40 p-4">
+        <ProductImageField kind="tour" id={tour?.id} url={coverUrl} />
+      </section>
 
       <section className="space-y-4">
         <div>

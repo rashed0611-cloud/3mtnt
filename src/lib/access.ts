@@ -105,6 +105,7 @@ const PATH_MODULES: Record<string, ModuleKey> = {
   "details-templates": "content",
   menu: "content",
   themes: "content",
+  gallery: "common",
   media: "content",
   reviews: "content",
   testimonials: "content",

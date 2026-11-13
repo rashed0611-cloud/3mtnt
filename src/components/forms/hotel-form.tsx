@@ -5,10 +5,11 @@ import Link from "next/link";
 import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
+import { ProductImageField } from "@/components/forms/product-image-field";
 import { saveHotelAction, type FormState } from "@/app/admin/actions";
 import type { Hotel } from "@/lib/types";
 
-export function HotelForm({ hotel }: { hotel?: Hotel }) {
+export function HotelForm({ hotel, coverUrl }: { hotel?: Hotel; coverUrl?: string }) {
   const [state, formAction, pending] = useActionState(saveHotelAction, {} as FormState);
   const errors = state.fieldErrors ?? {};
 
@@ -21,6 +22,10 @@ export function HotelForm({ hotel }: { hotel?: Hotel }) {
       ) : null}
 
       {hotel ? <input type="hidden" name="id" value={hotel.id} /> : null}
+
+      <section className="space-y-4 rounded-control border border-line bg-slate-50/40 p-4">
+        <ProductImageField kind="hotel" id={hotel?.id} url={coverUrl} />
+      </section>
 
       <section className="space-y-4">
         <div>

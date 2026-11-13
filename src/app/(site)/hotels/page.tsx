@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, BedDouble, Building2, CalendarDays, Hotel, MapPin, Search, Star, Users } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
 import { getPublicDatabase } from "@/lib/db/public";
+import { listCatalogCovers } from "@/lib/media";
 import { gradientFor, destinationInitials } from "@/lib/public";
 import { formatMoney } from "@/lib/utils";
 
@@ -29,6 +30,7 @@ export default async function HotelsPage({
 }) {
   const params = await searchParams;
   const db = await getPublicDatabase();
+  const covers = await listCatalogCovers("hotel");
   const term = (params.q ?? "").trim().toLowerCase();
   const locations = Array.from(new Set(db.hotels.map((hotel) => hotel.location))).sort();
   const stay =
@@ -133,7 +135,15 @@ export default async function HotelsPage({
                 <article key={hotel.id} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
                   <Link href={`/hotels/${hotel.slug}`} className="block">
                     <div className={`relative flex h-40 items-end bg-gradient-to-br ${gradientFor(hotel.location)} p-4`}>
-                      <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_30%_30%,white_1px,transparent_1px)] [background-size:18px_18px]" />
+                      {covers.get(hotel.id) ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={covers.get(hotel.id)} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/25 to-slate-950/5" />
+                        </>
+                      ) : (
+                        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_30%_30%,white_1px,transparent_1px)] [background-size:18px_18px]" />
+                      )}
                       <div className="absolute right-3 top-3 flex items-center gap-0.5 rounded-full bg-white/15 px-2 py-1 text-[9.5px] font-semibold text-white backdrop-blur">
                         {Array.from({ length: hotel.starRating }).map((_, index) => (
                           <Star key={index} className="h-2.5 w-2.5 fill-amber-300 text-amber-300" />

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock3, FileCheck2, FileSearch, Globe2, Search, Wallet } from "lucide-react";
 import { getPublicDatabase } from "@/lib/db/public";
+import { listCatalogCovers } from "@/lib/media";
 import { formatMoney } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export default async function VisasPage({
 }) {
   const params = await searchParams;
   const db = await getPublicDatabase();
+  const covers = await listCatalogCovers("visa");
   const term = (params.q ?? "").trim().toLowerCase();
   const countries = Array.from(new Set(db.visas.map((visa) => visa.country))).sort();
 
@@ -100,8 +102,13 @@ export default async function VisasPage({
               <article key={visa.id} className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2.5">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-                      <Globe2 className="h-5 w-5" />
+                    <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-amber-50 text-amber-600">
+                      {covers.get(visa.id) ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={covers.get(visa.id)} alt="" className="h-full w-full object-cover" loading="lazy" />
+                      ) : (
+                        <Globe2 className="h-5 w-5" />
+                      )}
                     </span>
                     <div>
                       <p className="text-[13.5px] font-semibold text-ink">{visa.country}</p>

@@ -5,10 +5,11 @@ import Link from "next/link";
 import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
+import { ProductImageField } from "@/components/forms/product-image-field";
 import { saveVisaAction, type FormState } from "@/app/admin/actions";
 import type { VisaPackage } from "@/lib/types";
 
-export function VisaForm({ visa }: { visa?: VisaPackage }) {
+export function VisaForm({ visa, coverUrl }: { visa?: VisaPackage; coverUrl?: string }) {
   const [state, formAction, pending] = useActionState(saveVisaAction, {} as FormState);
   const errors = state.fieldErrors ?? {};
 
@@ -21,6 +22,15 @@ export function VisaForm({ visa }: { visa?: VisaPackage }) {
       ) : null}
 
       {visa ? <input type="hidden" name="id" value={visa.id} /> : null}
+
+      <section className="space-y-4 rounded-control border border-line bg-slate-50/40 p-4">
+        <ProductImageField
+          kind="visa"
+          id={visa?.id}
+          url={coverUrl}
+          hint="Shown on the visa card and detail page. JPG, PNG, WebP or AVIF up to 4 MB."
+        />
+      </section>
 
       <section className="space-y-4">
         <div>

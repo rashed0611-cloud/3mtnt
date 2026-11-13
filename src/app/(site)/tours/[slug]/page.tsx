@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { TourCard } from "@/components/public/tour-card";
 import { getPublicDatabase } from "@/lib/db/public";
+import { listCatalogCovers } from "@/lib/media";
 import { gradientFor, destinationInitials } from "@/lib/public";
 import { formatMoney, titleCase } from "@/lib/utils";
 
@@ -36,6 +37,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
   const db = await getPublicDatabase();
   const tour = db.tours.find((item) => item.slug === slug || item.id === slug);
   if (!tour) notFound();
+  const coverUrl = (await listCatalogCovers("tour")).get(tour.id);
 
   const related = db.tours
     .filter((item) => item.id !== tour.id && item.status === "active" && (item.destination === tour.destination || item.type === tour.type))
@@ -59,7 +61,15 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
       </section>
 
       <section className={`relative overflow-hidden bg-gradient-to-br ${gradientFor(tour.destination)}`}>
-        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white_1px,transparent_1px)] [background-size:22px_22px]" />
+        {coverUrl ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/60 to-slate-950/25" />
+          </>
+        ) : (
+          <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white_1px,transparent_1px)] [background-size:22px_22px]" />
+        )}
         <div className="relative mx-auto max-w-7xl px-4 py-10 text-white sm:px-6 lg:px-8 lg:py-14">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide backdrop-blur">{titleCase(tour.type)}</span>

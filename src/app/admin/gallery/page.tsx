@@ -1,0 +1,68 @@
+import type { Metadata } from "next";
+import { HardDrive, ImageIcon, Images, Package } from "lucide-react";
+import { GalleryManager } from "@/components/admin/gallery-manager";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatCard } from "@/components/ui/stat-card";
+import { canWriteModule, normalizeRole } from "@/lib/access";
+import { requireModuleAccess } from "@/lib/auth";
+import { getRepository } from "@/lib/db";
+import { listMediaLibrary, MEDIA_MODULES } from "@/lib/media";
+
+export const metadata: Metadata = { title: "Image gallery" };
+
+function formatBytes(bytes: number) {
+  if (!bytes) return "0 KB";
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export default async function GalleryPage() {
+  const user = await requireModuleAccess(MEDIA_MODULES, "view");
+  const [items, db] = await Promise.all([listMediaLibrary(), getRepository().getDatabase()]);
+
+  const productNames = new Map<string, string>();
+  for (const tour of db.tours) productNames.set(`tour:${tour.id}`, tour.title);
+  for (const hotel of db.hotels) productNames.set(`hotel:${hotel.id}`, hotel.name);
+  for (const visa of db.visas) productNames.set(`visa:${visa.id}`, `${visa.country} ${visa.visaType}`);
+  for (const pkg of db.hajjPackages) productNames.set(`hajj:${pkg.id}`, pkg.title);
+
+  // Where a site image is currently used, so deleting it is an informed choice.
+  const siteUsage = new Map<string, string>();
+  const appearance = db.settings.appearance;
+  if (appearance.banner.imageUrl) siteUsage.set(appearance.banner.imageUrl, "Homepage banner");
+  if (appearance.brand.logoUrl) siteUsage.set(appearance.brand.logoUrl, "Site logo");
+  if (appearance.brand.faviconUrl) siteUsage.set(appearance.brand.faviconUrl, "Browser icon");
+  for (const image of db.settings.gallery) siteUsage.set(image.url, "Homepage gallery");
+
+  const gallery = items.map((item) => ({
+    ...item,
+    usedBy:
+      item.kind && item.entityId
+        ? productNames.get(`${item.kind}:${item.entityId}`)
+        : siteUsage.get(item.url),
+  }));
+
+  const covers = gallery.filter((item) => item.group === "catalog").length;
+  const totalBytes = gallery.reduce((sum, item) => sum + item.size, 0);
+  const role = normalizeRole(user.role);
+  const canManage = MEDIA_MODULES.some((module) => canWriteModule(role, module));
+
+  return (
+    <div className="space-y-4">
+      <PageHeader
+        title="Image gallery"
+        description="Every uploaded image in one place — product cover photos and website media. Upload once, copy the link, or remove what is no longer used."
+        breadcrumb={[{ label: "Workspace", href: "/admin" }, { label: "Image gallery" }]}
+      />
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Images stored" value={String(gallery.length)} hint="Across covers and site media" icon={Images} tone="blue" />
+        <StatCard label="Product covers" value={String(covers)} hint="Tours, hotels, visas and Hajj" icon={Package} tone="violet" />
+        <StatCard label="Site media" value={String(gallery.length - covers)} hint="Banners, logos and gallery" icon={ImageIcon} tone="amber" />
+        <StatCard label="Storage used" value={formatBytes(totalBytes)} hint="Supabase Storage" icon={HardDrive} tone="slate" />
+      </div>
+
+      <GalleryManager items={gallery} canManage={canManage} />
+    </div>
+  );
+}

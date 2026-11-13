@@ -5,10 +5,11 @@ import Link from "next/link";
 import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
+import { ProductImageField } from "@/components/forms/product-image-field";
 import { saveHajjPackageAction, type FormState } from "@/app/admin/actions";
 import type { HajjPackage } from "@/lib/types";
 
-export function HajjPackageForm({ pkg }: { pkg?: HajjPackage }) {
+export function HajjPackageForm({ pkg, coverUrl }: { pkg?: HajjPackage; coverUrl?: string }) {
   const [state, formAction, pending] = useActionState(saveHajjPackageAction, {} as FormState);
   const errors = state.fieldErrors ?? {};
 
@@ -21,6 +22,15 @@ export function HajjPackageForm({ pkg }: { pkg?: HajjPackage }) {
       ) : null}
 
       {pkg ? <input type="hidden" name="id" value={pkg.id} /> : null}
+
+      <section className="space-y-4 rounded-control border border-line bg-slate-50/40 p-4">
+        <ProductImageField
+          kind="hajj"
+          id={pkg?.id}
+          url={coverUrl}
+          hint="Shown on the pilgrimage card and detail page. JPG, PNG, WebP or AVIF up to 4 MB."
+        />
+      </section>
 
       <section className="space-y-4">
         <div>

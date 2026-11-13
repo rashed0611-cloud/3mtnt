@@ -4,12 +4,20 @@ import type { Tour } from "@/lib/types";
 import { gradientFor, destinationInitials } from "@/lib/public";
 import { formatMoney, titleCase } from "@/lib/utils";
 
-export function TourCard({ tour }: { tour: Tour }) {
+export function TourCard({ tour, coverUrl }: { tour: Tour; coverUrl?: string }) {
   return (
     <article className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
       <Link href={`/tours/${tour.slug}`} className="block">
         <div className={`relative flex h-40 items-end bg-gradient-to-br ${gradientFor(tour.destination)} p-4`}>
-          <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white_1px,transparent_1px)] [background-size:16px_16px]" />
+          {coverUrl ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/25 to-slate-950/5" />
+            </>
+          ) : (
+            <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white_1px,transparent_1px)] [background-size:16px_16px]" />
+          )}
           <span className="absolute right-3 top-3 rounded-full bg-white/15 px-2 py-1 text-[9.5px] font-semibold uppercase tracking-wide text-white backdrop-blur">
             {titleCase(tour.type)}
           </span>

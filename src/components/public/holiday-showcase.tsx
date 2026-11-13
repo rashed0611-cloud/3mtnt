@@ -18,7 +18,7 @@ const FILTERS = [
 
 type FilterKey = (typeof FILTERS)[number]["key"];
 
-export function HolidayShowcase({ tours, total }: { tours: Tour[]; total: number }) {
+export function HolidayShowcase({ tours, total, covers }: { tours: Tour[]; total: number; covers?: Record<string, string> }) {
   const [filter, setFilter] = useState<FilterKey>("all");
 
   const filtered = useMemo(() => {
@@ -77,7 +77,7 @@ export function HolidayShowcase({ tours, total }: { tours: Tour[]; total: number
       {filtered.length ? (
         <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filtered.slice(0, 6).map((tour) => (
-            <TourCard key={tour.id} tour={tour} />
+            <TourCard key={tour.id} tour={tour} coverUrl={covers?.[tour.id]} />
           ))}
         </div>
       ) : (

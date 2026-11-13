@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, Download, Globe2, MapPin, Plus, Star, Users } from "lucide-react";
+import { ArrowUpRight, Download, Globe2, MapPin, Pencil, Plus, Star, Users } from "lucide-react";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -115,6 +115,7 @@ export default async function ToursPage({
                     <th>Supplier</th>
                     <th>Created</th>
                     <th className="text-right">Status</th>
+                    <th className="text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -143,6 +144,14 @@ export default async function ToursPage({
                       <td className="max-w-[150px] truncate text-[11.5px] text-slate-600">{tour.supplier}</td>
                       <td className="whitespace-nowrap text-[11px] text-muted">{formatDate(tour.createdAt, { day: "2-digit", month: "short", year: "numeric" })}</td>
                       <td className="text-right"><StatusBadge status={tour.status} /></td>
+                        <td className="text-right">
+                          <Link
+                            href={`/admin/tours/${tour.id}/edit`}
+                            className="inline-flex items-center gap-1 rounded-control border border-line bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
+                          >
+                            <Pencil className="h-3 w-3" /> Edit
+                          </Link>
+                        </td>
                     </tr>
                   ))}
                 </tbody>

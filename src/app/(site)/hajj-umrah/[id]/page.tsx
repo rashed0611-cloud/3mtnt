@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, CalendarDays, Check, Landmark, MapPin, Moon, Phone, Plane, ShieldCheck, Users } from "lucide-react";
 import { getPublicDatabase } from "@/lib/db/public";
+import { listCatalogCovers } from "@/lib/media";
 import { formatDate, formatMoney, percent, titleCase } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -18,6 +19,7 @@ export default async function HajjPackageDetailPage({ params }: { params: Promis
   const db = await getPublicDatabase();
   const pkg = db.hajjPackages.find((item) => item.id === id);
   if (!pkg) notFound();
+  const coverUrl = (await listCatalogCovers("hajj")).get(pkg.id);
 
   const used = percent(pkg.booked, pkg.capacity);
   const remaining = Math.max(0, pkg.capacity - pkg.booked);
@@ -37,6 +39,13 @@ export default async function HajjPackageDetailPage({ params }: { params: Promis
   return (
     <>
       <section className="relative overflow-hidden bg-gradient-to-br from-[#07332a] via-[#0a4a3b] to-[#0b6b4f] text-white">
+        {coverUrl ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#04231c]/90 via-[#07332a]/75 to-[#07332a]/35" />
+          </>
+        ) : null}
         <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full border border-emerald-300/20" />
         <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
           <nav className="flex flex-wrap items-center gap-1.5 text-[10.5px] text-emerald-100/60" aria-label="Breadcrumb">
@@ -47,8 +56,13 @@ export default async function HajjPackageDetailPage({ params }: { params: Promis
             <span className="text-white/90">{pkg.tier}</span>
           </nav>
           <div className="mt-4 flex items-start gap-3">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/10 backdrop-blur">
-              <Icon className="h-7 w-7" />
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/20 bg-white/10 backdrop-blur">
+              {coverUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <Icon className="h-7 w-7" />
+              )}
             </span>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-100/70">

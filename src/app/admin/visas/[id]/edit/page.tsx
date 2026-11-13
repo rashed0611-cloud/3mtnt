@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { requireUser } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
+import { listCatalogCovers } from "@/lib/media";
 
 export const metadata: Metadata = { title: "Edit visa product" };
 
@@ -16,6 +17,7 @@ export default async function EditVisaPage({ params }: { params: Promise<{ id: s
   const db = await getRepository().getDatabase();
   const visa = db.visas.find((item) => item.id === id);
   if (!visa) notFound();
+  const coverUrl = (await listCatalogCovers("visa")).get(visa.id);
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -31,7 +33,7 @@ export default async function EditVisaPage({ params }: { params: Promise<{ id: s
       />
       <Card>
         <CardContent>
-          <VisaForm visa={visa} />
+          <VisaForm visa={visa} coverUrl={coverUrl} />
         </CardContent>
       </Card>
     </div>

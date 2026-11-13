@@ -26,6 +26,7 @@ import { TravelSearch } from "@/components/public/travel-search";
 import { TrustStrip } from "@/components/public/trust-strip";
 import { DestinationTile } from "@/components/public/tour-card";
 import { getPublicDatabase } from "@/lib/db/public";
+import { listCatalogCovers } from "@/lib/media";
 import { cn, formatMoney, titleCase } from "@/lib/utils";
 
 const SERVICES = [
@@ -112,6 +113,7 @@ export default async function HomePage() {
   const centered = banner.align === "center" || !hasBanner;
 
   const tours = db.tours.filter((tour) => tour.status === "active");
+  const tourCovers = Object.fromEntries(await listCatalogCovers("tour"));
   const visas = db.visas.filter((visa) => visa.status === "active");
   const hotels = db.hotels.filter((hotel) => hotel.status === "publish");
   const today = new Date().toISOString().slice(0, 10);
@@ -406,7 +408,7 @@ export default async function HomePage() {
                 View all packages <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
-            <HolidayShowcase tours={tours} total={tours.length} />
+            <HolidayShowcase tours={tours} total={tours.length} covers={tourCovers} />
           </div>
         </section>
       ) : null}

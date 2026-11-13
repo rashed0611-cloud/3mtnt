@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, BedDouble, Building2, Download, MapPin, Plus, Star } from "lucide-react";
+import { ArrowUpRight, BedDouble, Building2, Download, MapPin, Pencil, Plus, Star } from "lucide-react";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -130,6 +130,7 @@ export default async function HotelsPage({
                     <th>Amenities</th>
                     <th>Supplier</th>
                     <th className="text-right">Status</th>
+                    <th className="text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -164,6 +165,14 @@ export default async function HotelsPage({
                       <td className="max-w-[170px] truncate text-[11px] text-slate-500">{hotel.amenities.join(", ")}</td>
                       <td className="max-w-[150px] truncate text-[11.5px] text-slate-600">{hotel.supplier}</td>
                       <td className="text-right"><StatusBadge status={hotel.status} /></td>
+                        <td className="text-right">
+                          <Link
+                            href={`/admin/hotels/${hotel.id}/edit`}
+                            className="inline-flex items-center gap-1 rounded-control border border-line bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
+                          >
+                            <Pencil className="h-3 w-3" /> Edit
+                          </Link>
+                        </td>
                     </tr>
                   ))}
                 </tbody>

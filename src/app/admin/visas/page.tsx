@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, CalendarPlus, Download, FileCheck2, FileSearch, Globe2, Plus, Timer, Wallet } from "lucide-react";
+import { ArrowUpRight, CalendarPlus, Download, FileCheck2, FileSearch, Globe2, Pencil, Plus, Timer, Wallet } from "lucide-react";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -144,6 +144,7 @@ export default async function VisasPage({
                     <th className="text-center">Applications</th>
                     <th>Requirements</th>
                     <th className="text-right">Status</th>
+                    <th className="text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -184,6 +185,14 @@ export default async function VisasPage({
                         <td className="max-w-[220px] truncate text-[11px] text-slate-500">{visa.requiredDocuments.join(", ")}</td>
                         <td className="text-right">
                           <StatusBadge status={visa.status === "active" ? "publish" : "draft"} />
+                        </td>
+                        <td className="text-right">
+                          <Link
+                            href={`/admin/visas/${visa.id}/edit`}
+                            className="inline-flex items-center gap-1 rounded-control border border-line bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
+                          >
+                            <Pencil className="h-3 w-3" /> Edit
+                          </Link>
                         </td>
                       </tr>
                     );

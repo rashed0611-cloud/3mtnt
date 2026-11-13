@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, CalendarPlus, Download, Landmark, Moon, Plane, Plus, Users, Wallet } from "lucide-react";
+import { ArrowUpRight, CalendarPlus, Download, Landmark, Moon, Pencil, Plane, Plus, Users, Wallet } from "lucide-react";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -167,6 +167,7 @@ export default async function HajjPackagesPage({
                     <th className="w-[180px]">Occupancy</th>
                     <th className="text-right">Package value</th>
                     <th className="text-right">Status</th>
+                    <th className="text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -212,6 +213,14 @@ export default async function HajjPackagesPage({
                         <td className="whitespace-nowrap text-right text-[12px] font-medium text-ink">{formatMoney(pkg.booked * pkg.price, "BDT", 0)}</td>
                         <td className="text-right">
                           <StatusBadge status={pkg.status === "active" ? "active" : "draft"} />
+                        </td>
+                        <td className="text-right">
+                          <Link
+                            href={`/admin/hajj-umrah/packages/${pkg.id}/edit`}
+                            className="inline-flex items-center gap-1 rounded-control border border-line bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
+                          >
+                            <Pencil className="h-3 w-3" /> Edit
+                          </Link>
                         </td>
                       </tr>
                     );

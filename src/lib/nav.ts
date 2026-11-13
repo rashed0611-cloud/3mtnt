@@ -315,7 +315,7 @@ export const navigation: NavSection[] = [
           { label: "Details Templates", href: "/admin/details-templates" },
           { label: "Menu Builder", href: "/admin/menu" },
           { label: "Themes", href: "/admin/themes" },
-          { label: "Media Library", href: "/admin/media/library" },
+          { label: "Image Gallery", href: "/admin/gallery" },
           { label: "Reviews", href: "/admin/reviews" },
           { label: "Testimonials", href: "/admin/testimonials" },
           { label: "FAQ", href: "/admin/faq" },

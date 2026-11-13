@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Landmark, MapPin, Moon, Plane, Search, Users } from "lucide-react";
 import { getPublicDatabase } from "@/lib/db/public";
+import { listCatalogCovers } from "@/lib/media";
 import { formatDate, formatMoney, percent, titleCase } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export default async function HajjUmrahPage({
 }) {
   const params = await searchParams;
   const db = await getPublicDatabase();
+  const covers = await listCatalogCovers("hajj");
   const term = (params.q ?? "").trim().toLowerCase();
   const today = new Date().toISOString().slice(0, 10);
 
@@ -118,7 +120,15 @@ export default async function HajjUmrahPage({
               return (
                 <article key={pkg.id} className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
                   <div className="relative flex h-32 items-end bg-gradient-to-br from-[#0a4a3b] via-[#0b6b4f] to-[#0d8a63] p-4 text-white">
-                    <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_25%_25%,white_1px,transparent_1px)] [background-size:18px_18px]" />
+                    {covers.get(pkg.id) ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={covers.get(pkg.id)} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/30 to-slate-950/5" />
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_25%_25%,white_1px,transparent_1px)] [background-size:18px_18px]" />
+                    )}
                     <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-white/10 backdrop-blur"><Icon className="h-4 w-4" /></span>
                     <div className="relative">
                       <p className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-emerald-100/70">{kindLabel(pkg.kind)} · {pkg.tier}</p>
