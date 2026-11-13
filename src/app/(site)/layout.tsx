@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/public/site-footer";
 import { SupportWidget } from "@/components/public/support-widget";
 import { getSessionUser } from "@/lib/auth";
 import { getPublicDatabase, getPublicSettings } from "@/lib/db/public";
+import { toMediaDisplayUrl } from "@/lib/media-url";
 import { themeStyle, themeStylesheetHref } from "@/lib/theme";
 import type { SiteAnnouncement } from "@/lib/types";
 
@@ -24,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s · ${brandName}`,
     },
     description,
-    icons: appearance.brand.faviconUrl ? { icon: appearance.brand.faviconUrl } : undefined,
+    icons: appearance.brand.faviconUrl ? { icon: toMediaDisplayUrl(appearance.brand.faviconUrl) } : undefined,
     openGraph: {
       type: "website",
       siteName: brandName,
