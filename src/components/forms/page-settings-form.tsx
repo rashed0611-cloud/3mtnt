@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Image as ImageIcon, Loader2, RotateCcw, Save, Trash2, Upload } from "lucide-react";
+import { CheckCircle2, Image as ImageIcon, Images, Loader2, RotateCcw, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { updatePageAction, type PageSettingsState } from "@/app/admin/pages/actions";
@@ -27,7 +28,7 @@ export function PageSettingsForm({
 }) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(updatePageAction, initialState);
-  const fileId = useId();
+  const galleryHref = `/admin/gallery?page=${pageKey}`;
 
   const [bannerUrl, setBannerUrl] = useState(settings.banner.imageUrl);
   const [overlay, setOverlay] = useState(settings.banner.overlay);
@@ -35,21 +36,25 @@ export function PageSettingsForm({
   const [eyebrow, setEyebrow] = useState(settings.eyebrow);
   const [heading, setHeading] = useState(settings.heading);
   const [subtitle, setSubtitle] = useState(settings.subtitle);
-  const [local, setLocal] = useState<string | null>(null);
-  const objectUrl = useRef<string | null>(null);
   const errors = state.fieldErrors ?? {};
 
   useEffect(() => {
     if (state.message) router.refresh();
   }, [state.message, router]);
 
+  // The gallery writes the banner immediately, so pick up its choice when the
+  // editor comes back to this tab.
   useEffect(() => {
-    return () => {
-      if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
-    };
-  }, []);
+    setBannerUrl(settings.banner.imageUrl);
+  }, [settings.banner.imageUrl]);
 
-  const preview = useMemo(() => local || (bannerUrl ? toMediaDisplayUrl(bannerUrl) : ""), [local, bannerUrl]);
+  useEffect(() => {
+    const refresh = () => router.refresh();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, [router]);
+
+  const preview = useMemo(() => (bannerUrl ? toMediaDisplayUrl(bannerUrl) : ""), [bannerUrl]);
 
   return (
     <form action={formAction} className="space-y-5">
@@ -92,38 +97,19 @@ export function PageSettingsForm({
               </div>
 
               <div className="min-w-[220px] flex-1 space-y-2">
-                <input
-                  id={fileId}
-                  type="file"
-                  name="bannerFile"
-                  accept="image/jpeg,image/png,image/webp,image/avif"
-                  className="sr-only"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
-                    if (file) {
-                      objectUrl.current = URL.createObjectURL(file);
-                      setLocal(objectUrl.current);
-                    } else {
-                      setLocal(null);
-                    }
-                  }}
-                />
                 <div className="flex flex-wrap gap-2">
-                  <label
-                    htmlFor={fileId}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-control border border-line bg-white px-3 py-2 text-[11.5px] font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
+                  <Link
+                    href={galleryHref}
+                    target="_blank"
+                    rel="noopener"
+                    className="inline-flex items-center gap-1.5 rounded-control bg-primary px-3 py-2 text-[11.5px] font-semibold text-white transition hover:bg-primary/90"
                   >
-                    <Upload className="h-3.5 w-3.5" /> Upload banner
-                  </label>
+                    <Images className="h-3.5 w-3.5" /> Choose from gallery
+                  </Link>
                   {bannerUrl ? (
                     <button
                       type="button"
-                      onClick={() => {
-                        setBannerUrl("");
-                        setLocal(null);
-                        if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
-                      }}
+                      onClick={() => setBannerUrl("")}
                       className="inline-flex items-center gap-1.5 rounded-control border border-line bg-white px-3 py-2 text-[11.5px] font-medium text-red-600 transition hover:border-red-200 hover:bg-red-50"
                     >
                       <Trash2 className="h-3.5 w-3.5" /> Remove banner
@@ -131,7 +117,8 @@ export function PageSettingsForm({
                   ) : null}
                 </div>
                 <p className="text-[10.5px] leading-4 text-muted">
-                  Wide image, ideally 2400×1000 or larger. JPG, PNG, WebP or AVIF up to 4 MB.
+                  Opens the Image Gallery in a new tab. Pick an existing image or upload a new one — the banner is applied
+                  immediately. Save this page to update the overlay or copy.
                 </p>
                 <Field label={`Overlay darkness · ${overlay}%`}>
                   <input

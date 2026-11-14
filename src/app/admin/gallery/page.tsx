@@ -8,6 +8,7 @@ import { requireModuleAccess } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
 import { isCatalogKind, listMediaLibrary, MEDIA_MODULES, type CatalogKind } from "@/lib/media";
 import { toMediaDisplayUrl } from "@/lib/media-url";
+import { isSitePageKey, sitePageDefinition } from "@/lib/site-pages";
 
 export const metadata: Metadata = { title: "Image gallery" };
 
@@ -27,7 +28,7 @@ function formatBytes(bytes: number) {
 export default async function GalleryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ package?: string; slot?: string }>;
+  searchParams: Promise<{ package?: string; slot?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const user = await requireModuleAccess(MEDIA_MODULES, "view");
@@ -53,6 +54,19 @@ export default async function GalleryPage({
         }
       : undefined;
 
+  // When the page is opened from a page editor, the chosen image becomes that
+  // page's banner instead of a package cover.
+  const pageKey = params.page;
+  const pageTarget =
+    !target && isSitePageKey(pageKey)
+      ? {
+          key: pageKey,
+          label: sitePageDefinition(pageKey).label,
+          editHref: `/admin/pages/${pageKey}/edit`,
+          currentBanner: toMediaDisplayUrl(db.settings.pages[pageKey].banner.imageUrl),
+        }
+      : undefined;
+
   // Where a site image is currently used, so deleting it is an informed choice.
   // Stored settings keep absolute Supabase URLs, so normalise them to the
   // same proxy paths the library items use.
@@ -62,6 +76,11 @@ export default async function GalleryPage({
   if (appearance.brand.logoUrl) siteUsage.set(toMediaDisplayUrl(appearance.brand.logoUrl), "Site logo");
   if (appearance.brand.faviconUrl) siteUsage.set(toMediaDisplayUrl(appearance.brand.faviconUrl), "Browser icon");
   for (const image of db.settings.gallery) siteUsage.set(toMediaDisplayUrl(image.url), "Homepage gallery");
+  for (const [key, page] of Object.entries(db.settings.pages)) {
+    if (!page.banner.imageUrl) continue;
+    const label = isSitePageKey(key) ? sitePageDefinition(key).label : key;
+    siteUsage.set(toMediaDisplayUrl(page.banner.imageUrl), `${label} banner`);
+  }
 
   const gallery = items.map((item) => ({
     ...item,
@@ -92,7 +111,7 @@ export default async function GalleryPage({
         <StatCard label="Storage used" value={formatBytes(totalBytes)} hint="Supabase Storage" icon={HardDrive} tone="slate" />
       </div>
 
-      <GalleryManager items={gallery} canManage={canManage} target={target} />
+      <GalleryManager items={gallery} canManage={canManage} target={target} pageTarget={pageTarget} />
     </div>
   );
 }

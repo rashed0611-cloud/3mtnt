@@ -19,8 +19,10 @@ import {
   deleteMediaAction,
   uploadCatalogCoverAction,
   uploadGalleryImagesAction,
+  uploadPageBannerAction,
   uploadProductImagesAction,
   useLibraryImageAction,
+  usePageBannerAction,
   type MediaActionState,
 } from "@/app/admin/gallery/actions";
 import { toAbsoluteMediaUrl } from "@/lib/media-url";
@@ -34,6 +36,13 @@ export interface GalleryTarget {
   name: string;
   slot: "cover" | "related";
   editHref: string;
+}
+
+export interface GalleryPageTarget {
+  key: string;
+  label: string;
+  editHref: string;
+  currentBanner: string;
 }
 
 export interface GalleryItem {
@@ -94,15 +103,18 @@ export function GalleryManager({
   items,
   canManage,
   target,
+  pageTarget,
 }: {
   items: GalleryItem[];
   canManage: boolean;
   target?: GalleryTarget;
+  pageTarget?: GalleryPageTarget;
 }) {
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
   const relatedInput = useRef<HTMLInputElement>(null);
+  const pageBannerInput = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState<FilterKey>("all");
   const [term, setTerm] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
@@ -188,6 +200,47 @@ export function GalleryManager({
       }
       setAttachMessage(result.message ?? "Photos added.");
       if (relatedInput.current) relatedInput.current.value = "";
+      router.refresh();
+    });
+  }
+
+  function uploadPageBanner(files: FileList) {
+    if (!pageTarget) return;
+    const file = files[0];
+    if (!file) return;
+    setAttachError(null);
+    setAttachMessage(null);
+    const formData = new FormData();
+    formData.set("page", pageTarget.key);
+    formData.set("file", file);
+
+    startAttach(async () => {
+      const result: MediaActionState = await uploadPageBannerAction({}, formData);
+      if (result.error) {
+        setAttachError(result.error);
+        return;
+      }
+      setAttachMessage(result.message ?? "Page banner updated.");
+      if (pageBannerInput.current) pageBannerInput.current.value = "";
+      router.refresh();
+    });
+  }
+
+  function usePageBanner(item: GalleryItem) {
+    if (!pageTarget) return;
+    setAttachError(null);
+    setAttachMessage(null);
+    const formData = new FormData();
+    formData.set("page", pageTarget.key);
+    formData.set("url", item.url);
+
+    startAttach(async () => {
+      const result: MediaActionState = await usePageBannerAction({}, formData);
+      if (result.error) {
+        setAttachError(result.error);
+        return;
+      }
+      setAttachMessage(result.message ?? "Page banner updated.");
       router.refresh();
     });
   }
@@ -302,7 +355,70 @@ export function GalleryManager({
         </div>
       ) : null}
 
-      {canManage && !target ? (
+      {pageTarget ? (
+        <div className="card-surface space-y-3 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[13px] font-semibold text-ink">Choose the banner for {pageTarget.label}</p>
+              <p className="text-[11px] leading-5 text-muted">
+                Pick any image below to use as this page&apos;s banner, or upload a new one. The banner applies as soon as you choose it.
+              </p>
+            </div>
+            <Link
+              href={pageTarget.editHref}
+              className="inline-flex items-center gap-1.5 rounded-control border border-line bg-white px-3 py-2 text-[11.5px] font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> Back to page
+            </Link>
+          </div>
+
+          {canManage ? (
+            <>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => pageBannerInput.current?.click()}
+                  disabled={attaching}
+                  className="inline-flex items-center gap-1.5 rounded-control bg-primary px-3 py-2 text-[11.5px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
+                >
+                  {attaching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} Upload new banner
+                </button>
+                <span className="inline-flex items-center gap-1.5 rounded-control border border-line bg-white px-3 py-2 text-[11px] font-medium text-slate-500">
+                  <Images className="h-3.5 w-3.5" /> Or use an image from the gallery below
+                </span>
+              </div>
+              <input
+                ref={pageBannerInput}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                className="sr-only"
+                onChange={(event) => {
+                  if (event.currentTarget.files?.length) uploadPageBanner(event.currentTarget.files);
+                }}
+              />
+            </>
+          ) : (
+            <p className="rounded-control border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-5 text-amber-900">
+              Your role can view this page but not change its banner.
+            </p>
+          )}
+
+          {attachError ? (
+            <p role="alert" className="rounded-control border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-medium text-red-700">
+              {attachError}
+            </p>
+          ) : attachMessage ? (
+            <p className="text-[11px] font-medium text-emerald-600">
+              {attachMessage}{" "}
+              <Link href={pageTarget.editHref} className="font-semibold underline underline-offset-2">
+                Back to page
+              </Link>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {canManage && !target && !pageTarget ? (
         <div className="card-surface p-4">
           <form action={uploadAction} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
@@ -409,6 +525,10 @@ export function GalleryManager({
                     <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[9.5px] font-semibold text-white">
                       <Check className="h-2.5 w-2.5" /> In this package
                     </span>
+                  ) : pageTarget && pageTarget.currentBanner === item.url ? (
+                    <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[9.5px] font-semibold text-white">
+                      <Check className="h-2.5 w-2.5" /> Current banner
+                    </span>
                   ) : null}
                 </div>
 
@@ -440,6 +560,16 @@ export function GalleryManager({
                         <Images className="h-3 w-3" />
                       )}
                       {target.slot === "cover" ? "Use as cover" : "Add to package"}
+                    </button>
+                  ) : pageTarget && canManage ? (
+                    <button
+                      type="button"
+                      onClick={() => usePageBanner(item)}
+                      disabled={attaching || pageTarget.currentBanner === item.url}
+                      className="inline-flex w-full items-center justify-center gap-1 rounded-control bg-primary px-2 py-1.5 text-[10.5px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
+                    >
+                      {attaching ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
+                      {pageTarget.currentBanner === item.url ? "Current banner" : "Use as banner"}
                     </button>
                   ) : null}
 

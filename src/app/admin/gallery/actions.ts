@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { requireModuleAccess } from "@/lib/auth";
+import { getRepository } from "@/lib/db";
 import { uploadSiteImage } from "@/lib/gallery-upload";
+import { isSitePageKey, sitePageDefinition } from "@/lib/site-pages";
+import type { SitePageKey } from "@/lib/types";
 import {
   copyMediaToProduct,
   deleteMediaObject,
@@ -48,6 +51,31 @@ function revalidateCatalog(kind: CatalogKind) {
 function readKind(formData: FormData): CatalogKind | null {
   const value = formData.get("kind");
   return isCatalogKind(value) ? value : null;
+}
+
+function safeMedia(value: string) {
+  const url = value.trim();
+  if (url.startsWith("/") && !url.startsWith("//")) return url;
+  if (/^https?:\/\//i.test(url)) return url;
+  return "";
+}
+
+/** Save a chosen image as the banner for one storefront page. */
+async function setPageBanner(pageKey: SitePageKey, imageUrl: string) {
+  const settings = await getRepository().getSettings();
+  const page = settings.pages[pageKey];
+  await getRepository().updateSettings({
+    pages: {
+      ...settings.pages,
+      [pageKey]: { ...page, banner: { ...page.banner, imageUrl } },
+    },
+  });
+
+  revalidatePath("/", "layout");
+  revalidatePath(sitePageDefinition(pageKey).path);
+  revalidatePath("/admin/pages");
+  revalidatePath(`/admin/pages/${pageKey}/edit`);
+  revalidatePath("/admin/gallery");
 }
 
 export async function uploadCatalogCoverAction(_prev: MediaActionState, formData: FormData): Promise<MediaActionState> {
@@ -140,6 +168,43 @@ export async function removeProductImageAction(_prev: MediaActionState, formData
     return { ok: true, message: "Photo removed." };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Could not remove the photo." };
+  }
+}
+
+/** Reuse an existing gallery image as a page banner. */
+export async function usePageBannerAction(_prev: MediaActionState, formData: FormData): Promise<MediaActionState> {
+  await requireModuleAccess("settings", "write");
+
+  const pageKey = String(formData.get("page") ?? "").trim();
+  if (!isSitePageKey(pageKey)) return { error: "That page cannot be edited from here." };
+
+  const url = safeMedia(String(formData.get("url") ?? ""));
+  if (!url) return { error: "Choose an image from the gallery." };
+
+  try {
+    await setPageBanner(pageKey, url);
+    return { ok: true, url, stamp: Date.now(), message: `${sitePageDefinition(pageKey).label} banner updated.` };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not use that image." };
+  }
+}
+
+/** Upload a new image and apply it as a page banner in one step. */
+export async function uploadPageBannerAction(_prev: MediaActionState, formData: FormData): Promise<MediaActionState> {
+  await requireModuleAccess("settings", "write");
+
+  const pageKey = String(formData.get("page") ?? "").trim();
+  if (!isSitePageKey(pageKey)) return { error: "That page cannot be edited from here." };
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return { error: "Choose an image file to upload." };
+
+  try {
+    const url = await uploadSiteImage(file, "banner");
+    await setPageBanner(pageKey, url);
+    return { ok: true, url, stamp: Date.now(), message: `${sitePageDefinition(pageKey).label} banner updated.` };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not upload the banner." };
   }
 }
 
