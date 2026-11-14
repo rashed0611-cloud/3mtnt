@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { FlightSearchForm } from "@/components/public/flight-search-form";
 import { InquiryForm } from "@/components/public/inquiry-form";
-import { PageBanner, bannerCardClass } from "@/components/public/page-banner";
+import { PageBanner } from "@/components/public/page-banner";
 import { getPublicSettings } from "@/lib/db/public";
 import { pageAccentStyle, pageContent } from "@/lib/site-pages";
 
@@ -93,60 +93,65 @@ export default async function FlightsPage() {
 
   return (
     <div style={pageAccentStyle(pageSettings)}>
-      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
+      <section
+        className="relative overflow-hidden border-b border-slate-200 text-white"
+        style={{ background: "linear-gradient(135deg, #042f5c 0%, rgb(var(--primary-rgb)) 55%, #0e9bd8 100%)" }}
+      >
         <PageBanner page={pageSettings} />
-        <div className={bannerCardClass(pageSettings, "mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8")}>
-          <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
-            <Link href="/" className="hover:text-primary">Home</Link>
+        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full border border-white/15" />
+        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-96 w-96 rounded-full bg-cyan-300/20 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <nav className="flex items-center gap-1.5 text-[10.5px] text-white/60" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-white">Home</Link>
             <span>/</span>
-            <span className="text-slate-600">Flights</span>
+            <span className="text-white/90">Flights</span>
           </nav>
-          <div className="mt-3 grid gap-6 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
+          <div className="mt-4 grid gap-8 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-2.5 py-1 text-[10px] font-semibold text-sky-700">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur">
                 <Plane className="h-3 w-3" /> {hero.eyebrow}
               </span>
-              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">{hero.heading}</h1>
-              <p className="mt-1.5 max-w-2xl text-[12.5px] leading-6 text-slate-500">
+              <h1 className="mt-3 max-w-2xl text-[32px] font-bold leading-tight tracking-tight sm:text-[40px]">{hero.heading}</h1>
+              <p className="mt-3 max-w-2xl text-[12.5px] leading-6 text-white/80">
                 {hero.subtitle}
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
-                <Link href="#flight-search" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-[12px] font-semibold text-white shadow-sm hover:bg-primary-strong">
+                <Link href="#flight-search" className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-[12px] font-semibold text-slate-900 shadow-sm transition hover:bg-white/90">
                   Search flights <Search className="h-3.5 w-3.5" />
                 </Link>
-                <Link href="#flight-enquiry" className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[12px] font-semibold text-slate-600 hover:border-primary/30 hover:text-primary">
+                <Link href="#flight-enquiry" className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-4 py-2.5 text-[12px] font-semibold text-white backdrop-blur transition hover:bg-white/20">
                   Request a fare quote <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-xl border border-slate-200 bg-white px-3.5 py-3">
-                <CalendarClock className="h-4 w-4 text-sky-500" />
-                <p className="mt-1.5 text-[9.5px] uppercase tracking-wide text-slate-400">Quote turnaround</p>
-                <p className="text-[15px] font-bold text-ink">Same business day</p>
+              <div className="rounded-xl border border-white/15 bg-white/10 px-3.5 py-3 backdrop-blur">
+                <CalendarClock className="h-4 w-4 text-sky-200" />
+                <p className="mt-1.5 text-[9.5px] uppercase tracking-wide text-white/60">Quote turnaround</p>
+                <p className="text-[15px] font-bold text-white">Same business day</p>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white px-3.5 py-3">
-                <BadgeCheck className="h-4 w-4 text-emerald-500" />
-                <p className="mt-1.5 text-[9.5px] uppercase tracking-wide text-slate-400">Fare rules</p>
-                <p className="text-[15px] font-bold text-ink">Explained upfront</p>
+              <div className="rounded-xl border border-white/15 bg-white/10 px-3.5 py-3 backdrop-blur">
+                <BadgeCheck className="h-4 w-4 text-emerald-200" />
+                <p className="mt-1.5 text-[9.5px] uppercase tracking-wide text-white/60">Fare rules</p>
+                <p className="text-[15px] font-bold text-white">Explained upfront</p>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white px-3.5 py-3">
-                <Headphones className="h-4 w-4 text-violet-500" />
-                <p className="mt-1.5 text-[9.5px] uppercase tracking-wide text-slate-400">Support</p>
-                <p className="text-[15px] font-bold text-ink">Named specialist</p>
+              <div className="rounded-xl border border-white/15 bg-white/10 px-3.5 py-3 backdrop-blur">
+                <Headphones className="h-4 w-4 text-violet-200" />
+                <p className="mt-1.5 text-[9.5px] uppercase tracking-wide text-white/60">Support</p>
+                <p className="text-[15px] font-bold text-white">Named specialist</p>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white px-3.5 py-3">
-                <ShieldCheck className="h-4 w-4 text-primary" />
-                <p className="mt-1.5 text-[9.5px] uppercase tracking-wide text-slate-400">Ticketing</p>
-                <p className="text-[15px] font-bold text-ink">Invoice included</p>
+              <div className="rounded-xl border border-white/15 bg-white/10 px-3.5 py-3 backdrop-blur">
+                <ShieldCheck className="h-4 w-4 text-white" />
+                <p className="mt-1.5 text-[9.5px] uppercase tracking-wide text-white/60">Ticketing</p>
+                <p className="text-[15px] font-bold text-white">Invoice included</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div id="flight-search" className="mx-auto max-w-7xl scroll-mt-20 px-4 pb-9 sm:px-6 lg:px-8">
+        <div id="flight-search" className="relative mx-auto max-w-7xl scroll-mt-20 px-4 pb-9 sm:px-6 lg:px-8">
           <FlightSearchForm />
-          <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px] text-slate-400">
+          <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px] text-white/60">
             <span>Open to everyone — no login needed.</span>
             <span className="hidden sm:inline">·</span>
             <span>Indicative fares only; the desk confirms live prices before ticketing.</span>

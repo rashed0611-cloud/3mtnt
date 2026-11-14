@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Compass, Filter, MapPin, Search, SlidersHorizontal, Users } from "lucide-react";
 import { TourCard } from "@/components/public/tour-card";
-import { PageBanner, bannerCardClass } from "@/components/public/page-banner";
+import { PageBanner } from "@/components/public/page-banner";
 import { Pagination } from "@/components/ui/pagination";
 import { getPublicDatabase } from "@/lib/db/public";
 import { listCatalogCovers, listProductImages } from "@/lib/media";
@@ -54,60 +54,65 @@ export default async function ToursPage({
 
   return (
     <div style={pageAccentStyle(pageSettings)}>
-      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
+      <section
+        className="relative overflow-hidden border-b border-slate-200 text-white"
+        style={{ background: "linear-gradient(135deg, #042f5c 0%, rgb(var(--primary-rgb)) 55%, #0e9bd8 100%)" }}
+      >
         <PageBanner page={pageSettings} />
-        <div className={bannerCardClass(pageSettings, "mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8")}>
-          <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
-            <Link href="/" className="hover:text-primary">Home</Link>
+        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full border border-white/15" />
+        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-96 w-96 rounded-full bg-cyan-300/20 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <nav className="flex items-center gap-1.5 text-[10.5px] text-white/60" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-white">Home</Link>
             <span>/</span>
-            <span className="text-slate-600">Holidays</span>
+            <span className="text-white/90">Holidays</span>
           </nav>
-          <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+          <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur">
                 <Compass className="h-3 w-3" /> {hero.eyebrow || `${db.tours.length} published holidays`}
               </span>
-              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">{hero.heading}</h1>
-              <p className="mt-1.5 max-w-2xl text-[12.5px] leading-6 text-slate-500">
+              <h1 className="mt-3 max-w-2xl text-[32px] font-bold leading-tight tracking-tight sm:text-[40px]">{hero.heading}</h1>
+              <p className="mt-3 max-w-2xl text-[12.5px] leading-6 text-white/80">
                 {hero.subtitle}
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-[9.5px] uppercase tracking-wide text-slate-400">Holidays from</p>
-              <p className="text-[20px] font-bold text-ink">৳{from.toLocaleString("en-US")}</p>
+            <div className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-right backdrop-blur">
+              <p className="text-[9.5px] uppercase tracking-wide text-white/60">Holidays from</p>
+              <p className="text-[22px] font-bold text-white">৳{from.toLocaleString("en-US")}</p>
             </div>
           </div>
 
-          <form method="get" className="mt-6 grid gap-2 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm sm:grid-cols-[1fr_190px_190px_auto]">
+          <form method="get" className="mt-6 grid gap-2 rounded-2xl border border-white/15 bg-white/10 p-2.5 backdrop-blur sm:grid-cols-[1fr_190px_190px_auto]">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
               <input
                 name="q"
                 defaultValue={params.q ?? ""}
                 placeholder="Search destination, tour or supplier"
-                className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-10 pr-3 text-[12.5px] outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/10"
+                className="h-10 w-full rounded-xl border border-white/15 bg-white/10 pl-10 pr-3 text-[12.5px] text-white outline-none transition placeholder:text-white/50 focus:border-white/30 focus:bg-white/15"
                 aria-label="Search tours"
               />
             </div>
             <select
               name="destination"
               defaultValue={params.destination ?? ""}
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-[12px] text-slate-600 outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+              className="h-10 rounded-xl border border-white/15 bg-white/10 px-3 text-[12px] text-white outline-none focus:border-white/30"
               aria-label="Filter by destination"
             >
-              <option value="">All destinations</option>
-              {destinations.map((destination) => <option key={destination} value={destination}>{destination}</option>)}
+              <option value="" className="text-slate-900">All destinations</option>
+              {destinations.map((destination) => <option key={destination} value={destination} className="text-slate-900">{destination}</option>)}
             </select>
             <select
               name="type"
               defaultValue={params.type ?? ""}
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-[12px] text-slate-600 outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+              className="h-10 rounded-xl border border-white/15 bg-white/10 px-3 text-[12px] text-white outline-none focus:border-white/30"
               aria-label="Filter by tour type"
             >
-              <option value="">All tour types</option>
-              {types.map((type) => <option key={type} value={type}>{titleCase(type)}</option>)}
+              <option value="" className="text-slate-900">All tour types</option>
+              {types.map((type) => <option key={type} value={type} className="text-slate-900">{titleCase(type)}</option>)}
             </select>
-            <button type="submit" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-primary px-5 text-[12px] font-semibold text-white transition hover:bg-primary-strong">
+            <button type="submit" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-5 text-[12px] font-semibold text-slate-900 transition hover:bg-white/90">
               <SlidersHorizontal className="h-3.5 w-3.5" /> Apply
             </button>
           </form>

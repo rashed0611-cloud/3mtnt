@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BedDouble, Building2, CalendarDays, Hotel, MapPin, Search, Star, Users } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
-import { PageBanner, bannerCardClass } from "@/components/public/page-banner";
+import { PageBanner } from "@/components/public/page-banner";
 import { getPublicDatabase } from "@/lib/db/public";
 import { fallbackImage } from "@/lib/fallback-image";
 import { listCatalogCovers, listProductImages } from "@/lib/media";
@@ -76,56 +76,61 @@ export default async function HotelsPage({
 
   return (
     <div style={pageAccentStyle(pageSettings)}>
-      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
+      <section
+        className="relative overflow-hidden border-b border-slate-200 text-white"
+        style={{ background: "linear-gradient(135deg, #042f5c 0%, rgb(var(--primary-rgb)) 55%, #0e9bd8 100%)" }}
+      >
         <PageBanner page={pageSettings} />
-        <div className={bannerCardClass(pageSettings, "mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8")}>
-          <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
-            <Link href="/" className="hover:text-primary">Home</Link>
+        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full border border-white/15" />
+        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-96 w-96 rounded-full bg-cyan-300/20 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <nav className="flex items-center gap-1.5 text-[10.5px] text-white/60" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-white">Home</Link>
             <span>/</span>
-            <span className="text-slate-600">Hotels</span>
+            <span className="text-white/90">Hotels</span>
           </nav>
-          <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+          <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-semibold text-violet-700">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur">
                 <Hotel className="h-3 w-3" /> {hero.eyebrow || `${db.hotels.length} hotel partners`}
               </span>
-              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">{hero.heading}</h1>
-              <p className="mt-1.5 max-w-2xl text-[12.5px] leading-6 text-slate-500">
+              <h1 className="mt-3 max-w-2xl text-[32px] font-bold leading-tight tracking-tight sm:text-[40px]">{hero.heading}</h1>
+              <p className="mt-3 max-w-2xl text-[12.5px] leading-6 text-white/80">
                 {hero.subtitle}
               </p>
               {stay ? (
-                <p className="mt-2 inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-[10.5px] font-semibold text-violet-700">
+                <p className="mt-3 inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10.5px] font-semibold text-white/90 backdrop-blur">
                   <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" /> {stayLabel}</span>
-                  <span className="inline-flex items-center gap-1 text-slate-500"><Users className="h-3 w-3" /> Rates confirmed by the desk</span>
+                  <span className="inline-flex items-center gap-1 text-white/60"><Users className="h-3 w-3" /> Rates confirmed by the desk</span>
                 </p>
               ) : null}
             </div>
-            <div className="text-right">
-              <p className="text-[9.5px] uppercase tracking-wide text-slate-400">Nightly rates from</p>
-              <p className="text-[20px] font-bold text-ink">৳{from.toLocaleString("en-US")}</p>
+            <div className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-right backdrop-blur">
+              <p className="text-[9.5px] uppercase tracking-wide text-white/60">Nightly rates from</p>
+              <p className="text-[22px] font-bold text-white">৳{from.toLocaleString("en-US")}</p>
             </div>
           </div>
 
-          <form method="get" className="mt-6 grid gap-2 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm sm:grid-cols-[1fr_200px_160px_auto]">
+          <form method="get" className="mt-6 grid gap-2 rounded-2xl border border-white/15 bg-white/10 p-2.5 backdrop-blur sm:grid-cols-[1fr_200px_160px_auto]">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
               <input
                 name="q"
                 defaultValue={params.q ?? ""}
                 placeholder="Search hotel, area or amenity"
-                className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-10 pr-3 text-[12.5px] outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/10"
+                className="h-10 w-full rounded-xl border border-white/15 bg-white/10 pl-10 pr-3 text-[12.5px] text-white outline-none transition placeholder:text-white/50 focus:border-white/30 focus:bg-white/15"
                 aria-label="Search hotels"
               />
             </div>
-            <select name="location" defaultValue={params.location ?? ""} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-[12px] text-slate-600 outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10" aria-label="Filter by location">
-              <option value="">All locations</option>
-              {locations.map((location) => <option key={location} value={location}>{location}</option>)}
+            <select name="location" defaultValue={params.location ?? ""} className="h-10 rounded-xl border border-white/15 bg-white/10 px-3 text-[12px] text-white outline-none focus:border-white/30" aria-label="Filter by location">
+              <option value="" className="text-slate-900">All locations</option>
+              {locations.map((location) => <option key={location} value={location} className="text-slate-900">{location}</option>)}
             </select>
-            <select name="stars" defaultValue={params.stars ?? ""} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-[12px] text-slate-600 outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10" aria-label="Filter by star rating">
-              <option value="">Any rating</option>
-              {[5, 4, 3].map((stars) => <option key={stars} value={stars}>{stars} star</option>)}
+            <select name="stars" defaultValue={params.stars ?? ""} className="h-10 rounded-xl border border-white/15 bg-white/10 px-3 text-[12px] text-white outline-none focus:border-white/30" aria-label="Filter by star rating">
+              <option value="" className="text-slate-900">Any rating</option>
+              {[5, 4, 3].map((stars) => <option key={stars} value={stars} className="text-slate-900">{stars} star</option>)}
             </select>
-            <button type="submit" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-primary px-5 text-[12px] font-semibold text-white transition hover:bg-primary-strong">
+            <button type="submit" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-5 text-[12px] font-semibold text-slate-900 transition hover:bg-white/90">
               <Building2 className="h-3.5 w-3.5" /> Search
             </button>
           </form>
