@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { isDeletableMediaPath, MEDIA_BUCKET } from "@/lib/media";
-import { createSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { isSupabaseConfigured, supabaseAnonKey, supabaseServiceKey, supabaseUrl } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 // Always read the current object: a deleted or replaced cover must not be
@@ -49,6 +49,11 @@ function imageResponse(body: Buffer, contentType: string, name: string) {
  * in development) through the site's own domain. Phones then load images from
  * the same origin as the page, with normal HTTP caching instead of a
  * third-party host that sends `no-cache` and cookies.
+ *
+ * Covers keep the same object path when replaced. The upstream request carries
+ * a one-off version query so neither the storage edge nor Next's fetch cache
+ * can hand back the previous photo; the page URL uses its own `?v=` for
+ * browser caching.
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const { path: segments } = await params;
@@ -63,11 +68,18 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pat
 
   if (isSupabaseConfigured()) {
     try {
-      const admin = createSupabaseAdminClient();
-      const { data, error } = await admin.storage.from(MEDIA_BUCKET).download(objectPath);
-      if (error || !data) return new Response("Not found", { status: 404 });
-      const buffer = Buffer.from(await data.arrayBuffer());
-      return imageResponse(buffer, data.type || fallbackType, name);
+      const key = supabaseServiceKey() || supabaseAnonKey();
+      const encodedPath = objectPath.split("/").map(encodeURIComponent).join("/");
+      const upstream = await fetch(
+        `${supabaseUrl()}/storage/v1/object/authenticated/${MEDIA_BUCKET}/${encodedPath}?v=${Date.now()}`,
+        {
+          headers: { apikey: key, Authorization: `Bearer ${key}` },
+          cache: "no-store",
+        },
+      );
+      if (!upstream.ok) return new Response("Not found", { status: 404 });
+      const buffer = Buffer.from(await upstream.arrayBuffer());
+      return imageResponse(buffer, upstream.headers.get("content-type") || fallbackType, name);
     } catch {
       return new Response("Not found", { status: 404 });
     }

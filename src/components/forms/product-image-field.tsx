@@ -18,7 +18,7 @@ export function ProductImageField({
   id,
   url,
   label = "Cover image",
-  hint = "Click Add image to choose a photo in the Image Gallery. It is shown on the website card and page header.",
+  hint = "Click Add image to choose a photo in the Image Gallery. It is shown on the website card and page header. Choosing a new photo replaces the current one.",
 }: {
   kind: CatalogKind;
   id?: string;
@@ -73,7 +73,7 @@ export function ProductImageField({
             }}
             className="inline-flex items-center gap-1.5 rounded-control bg-primary px-3 py-2 text-[11.5px] font-semibold text-white transition hover:bg-primary/90"
           >
-            <Plus className="h-3.5 w-3.5" /> Add image
+            <Plus className="h-3.5 w-3.5" /> {url ? "Change image" : "Add image"}
           </Link>
         ) : (
           <p className="rounded-control border border-dashed border-line bg-slate-50 px-3 py-2 text-[10.5px] leading-4 text-slate-500">

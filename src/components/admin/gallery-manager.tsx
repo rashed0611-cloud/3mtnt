@@ -285,10 +285,13 @@ export function GalleryManager({
         <div className="card-surface space-y-3 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-[13px] font-semibold text-ink">Adding images for {target.name}</p>
+              <p className="text-[13px] font-semibold text-ink">
+                {target.slot === "cover" ? `Change the cover for ${target.name}` : `Add photos for ${target.name}`}
+              </p>
               <p className="text-[11px] leading-5 text-muted">
-                Choose an image below to display on this package, or upload a new one. Images are attached to this package
-                immediately and stay in the gallery.
+                {target.slot === "cover"
+                  ? "Pick an image below to use as the package cover, or upload a new one. The new cover is applied immediately on the website."
+                  : "Pick images below to add to this package's photo strip, or upload new ones. Photos are attached immediately."}
               </p>
             </div>
             <Link
@@ -308,7 +311,8 @@ export function GalleryManager({
                   disabled={attaching}
                   className="inline-flex items-center gap-1.5 rounded-control bg-primary px-3 py-2 text-[11.5px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
                 >
-                  {attaching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} Upload new image
+                  {attaching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                  {target.slot === "cover" ? "Upload new cover" : "Upload new photos"}
                 </button>
                 <span className="inline-flex items-center gap-1.5 rounded-control border border-line bg-white px-3 py-2 text-[11px] font-medium text-slate-500">
                   <Images className="h-3.5 w-3.5" /> Or pick one from the gallery below
@@ -523,7 +527,7 @@ export function GalleryManager({
                   </span>
                   {isTargetImage ? (
                     <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[9.5px] font-semibold text-white">
-                      <Check className="h-2.5 w-2.5" /> In this package
+                      <Check className="h-2.5 w-2.5" /> {target.slot === "cover" ? "Current cover" : "In this package"}
                     </span>
                   ) : pageTarget && pageTarget.currentBanner === item.url ? (
                     <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[9.5px] font-semibold text-white">
@@ -549,17 +553,25 @@ export function GalleryManager({
                     <button
                       type="button"
                       onClick={() => useImage(item)}
-                      disabled={attaching}
+                      disabled={attaching || Boolean(isTargetImage)}
                       className="inline-flex w-full items-center justify-center gap-1 rounded-control bg-primary px-2 py-1.5 text-[10.5px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
                     >
                       {attaching ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : isTargetImage ? (
+                        <Check className="h-3 w-3" />
                       ) : target.slot === "cover" ? (
                         <Check className="h-3 w-3" />
                       ) : (
                         <Images className="h-3 w-3" />
                       )}
-                      {target.slot === "cover" ? "Use as cover" : "Add to package"}
+                      {isTargetImage
+                        ? target.slot === "cover"
+                          ? "Current cover"
+                          : "Already in package"
+                        : target.slot === "cover"
+                          ? "Use as cover"
+                          : "Add to package"}
                     </button>
                   ) : pageTarget && canManage ? (
                     <button

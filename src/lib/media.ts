@@ -97,7 +97,10 @@ export const listCatalogCovers = cache(async (kind: CatalogKind): Promise<Map<st
       for (const object of data ?? []) {
         if (!object.name || object.name.startsWith(".") || !object.id) continue;
         const id = object.name.replace(/\.[^.]+$/, "");
-        covers.set(id, supabasePublicUrl(`catalog/${kind}/${object.name}`));
+        // Covers keep the same path when replaced. A version query makes the
+        // browser and CDN fetch the new photo immediately after an upload.
+        const version = object.updated_at ? `?v=${encodeURIComponent(object.updated_at)}` : "";
+        covers.set(id, `${supabasePublicUrl(`catalog/${kind}/${object.name}`)}${version}`);
       }
     } catch {
       return covers;
@@ -109,7 +112,9 @@ export const listCatalogCovers = cache(async (kind: CatalogKind): Promise<Map<st
     const directory = localDirectory("catalog", kind);
     for (const name of await fs.readdir(directory)) {
       if (name.startsWith(".")) continue;
-      covers.set(name.replace(/\.[^.]+$/, ""), `/uploads/catalog/${kind}/${name}`);
+      const stat = await fs.stat(path.join(directory, name)).catch(() => null);
+      const version = stat ? `?v=${Math.round(stat.mtimeMs)}` : "";
+      covers.set(name.replace(/\.[^.]+$/, ""), `/uploads/catalog/${kind}/${name}${version}`);
     }
   } catch {
     /* No local uploads yet. */
@@ -130,10 +135,12 @@ export async function uploadCatalogCover(kind: CatalogKind, id: string, file: Fi
       .map((object) => `catalog/${kind}/${object.name}`);
     if (stale.length) await admin.storage.from(MEDIA_BUCKET).remove(stale);
 
+    // Covers keep the same path when replaced, so the storage edge must not
+    // hold the previous photo. The site proxy adds its own versioned caching.
     const { error } = await admin.storage.from(MEDIA_BUCKET).upload(objectPath, file, {
       contentType: file.type,
       upsert: true,
-      cacheControl: "60",
+      cacheControl: "0",
     });
     if (error) throw new Error(`Could not upload the image: ${error.message}`);
     return supabasePublicUrl(objectPath);
