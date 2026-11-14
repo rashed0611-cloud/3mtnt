@@ -16,7 +16,9 @@ import {
 } from "lucide-react";
 import { FlightQuoteForm } from "@/components/public/flight-quote-form";
 import { FlightSearchForm } from "@/components/public/flight-search-form";
+import { PageBanner, bannerCardClass } from "@/components/public/page-banner";
 import { getPublicSettings } from "@/lib/db/public";
+import { pageAccentStyle, pageContent } from "@/lib/site-pages";
 import {
   TRIP_TYPES,
   addDaysISO,
@@ -84,6 +86,8 @@ function stopsFor(query: FlightQuery) {
 export default async function FlightSearchPage({ searchParams }: { searchParams: Promise<FlightSearchParams> }) {
   const params = await searchParams;
   const settings = await getPublicSettings();
+  const pageSettings = settings.pages.flightSearch;
+  const hero = pageContent("flightSearch", pageSettings);
   const started = Boolean(params.depart || params.to || params.from);
   const { query, errors } = parseFlightSearch(params);
 
@@ -119,9 +123,10 @@ export default async function FlightSearchPage({ searchParams }: { searchParams:
   const today = todayISO();
 
   return (
-    <>
-      <section className="border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
-        <div className="mx-auto max-w-7xl px-4 pb-8 pt-9 sm:px-6 lg:px-8">
+    <div style={pageAccentStyle(pageSettings)}>
+      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
+        <PageBanner page={pageSettings} />
+        <div className={bannerCardClass(pageSettings, "mx-auto max-w-7xl px-4 pb-8 pt-9 sm:px-6 lg:px-8")}>
           <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary">Home</Link>
             <span>/</span>
@@ -132,12 +137,11 @@ export default async function FlightSearchPage({ searchParams }: { searchParams:
           <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
-                <Search className="h-3 w-3" /> One-way, round trip or multi-city · open to everyone
+                <Search className="h-3 w-3" /> {hero.eyebrow}
               </span>
-              <h1 className="mt-2 text-[28px] font-bold tracking-tight text-ink sm:text-[34px]">Search flights</h1>
+              <h1 className="mt-2 text-[28px] font-bold tracking-tight text-ink sm:text-[34px]">{hero.heading}</h1>
               <p className="mt-1.5 max-w-2xl text-[12.5px] leading-6 text-slate-500">
-                Pick one route, add a return, or build a multi-city itinerary. See an indicative fare band straight away, then send the
-                search to our flight desk for live options. No account, no payment and no obligation.
+                {hero.subtitle}
               </p>
             </div>
             <Link
@@ -482,6 +486,6 @@ export default async function FlightSearchPage({ searchParams }: { searchParams:
           </div>
         </aside>
       </section>
-    </>
+    </div>
   );
 }

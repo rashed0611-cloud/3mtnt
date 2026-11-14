@@ -77,6 +77,17 @@ export const SITE_PAGES: SitePageDefinition[] = [
       "Search one-way, round-trip or multi-city flights for an indicative fare band, then let the same operations team that handles your holiday, hotel or visa file confirm live options.",
   },
   {
+    key: "flightSearch",
+    label: "Flight search",
+    path: "/flights/search",
+    breadcrumb: "Flight search",
+    description: "The flight search form, fare bands and quote request.",
+    eyebrow: "One-way, round trip or multi-city · open to everyone",
+    heading: "Search flights",
+    subtitle:
+      "Pick one route, add a return, or build a multi-city itinerary. See an indicative fare band straight away, then send the search to our flight desk for live options. No account, no payment and no obligation.",
+  },
+  {
     key: "contact",
     label: "Contact",
     path: "/contact",

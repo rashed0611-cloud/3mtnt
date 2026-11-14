@@ -320,7 +320,16 @@ export interface SiteSeo {
 }
 
 /** Storefront pages that get their own banner and accent colour. */
-export type SitePageKey = "tours" | "hotels" | "visas" | "hajj" | "flights" | "contact" | "plan" | "portal";
+export type SitePageKey =
+  | "tours"
+  | "hotels"
+  | "visas"
+  | "hajj"
+  | "flights"
+  | "flightSearch"
+  | "contact"
+  | "plan"
+  | "portal";
 
 export interface SitePageBanner {
   imageUrl: string;
