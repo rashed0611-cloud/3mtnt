@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Landmark, MapPin, Moon, Plane, Search, Users } from "lucide-react";
+import { PageBanner } from "@/components/public/page-banner";
 import { getPublicDatabase } from "@/lib/db/public";
 import { fallbackImage } from "@/lib/fallback-image";
 import { listCatalogCovers, listProductImages } from "@/lib/media";
+import { pageAccentStyle, pageContent } from "@/lib/site-pages";
 import { formatDate, formatMoney, percent, titleCase } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -18,6 +20,8 @@ export default async function HajjUmrahPage({
 }) {
   const params = await searchParams;
   const db = await getPublicDatabase();
+  const pageSettings = db.settings.pages.hajj;
+  const hero = pageContent("hajj", pageSettings);
   const covers = new Map(await listCatalogCovers("hajj"));
   for (const image of await listProductImages("hajj")) {
     if (!covers.has(image.entityId)) covers.set(image.entityId, image.url);
@@ -41,8 +45,9 @@ export default async function HajjUmrahPage({
   const kindLabel = (kind: string) => (kind === "ramadan_umrah" ? "Ramadan Umrah" : titleCase(kind));
 
   return (
-    <>
+    <div style={pageAccentStyle(pageSettings)}>
       <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-br from-[#07332a] via-[#0a4a3b] to-[#0b6b4f] text-white">
+        <PageBanner page={pageSettings} />
         <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full border border-emerald-300/20" />
         <div className="absolute -bottom-28 right-40 h-80 w-80 rounded-full bg-emerald-400/10 blur-3xl" />
         <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -54,12 +59,11 @@ export default async function HajjUmrahPage({
           <div className="mt-4 grid gap-8 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/25 bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-100">
-                <Landmark className="h-3 w-3" /> {filtered.length} packages · {upcoming.length} upcoming departures
+                <Landmark className="h-3 w-3" /> {hero.eyebrow || `${filtered.length} packages · ${upcoming.length} upcoming departures`}
               </span>
-              <h1 className="mt-3 max-w-2xl text-[32px] font-bold leading-tight tracking-tight sm:text-[40px]">Hajj & Umrah, with a team beside you</h1>
+              <h1 className="mt-3 max-w-2xl text-[32px] font-bold leading-tight tracking-tight sm:text-[40px]">{hero.heading}</h1>
               <p className="mt-3 max-w-2xl text-[12.5px] leading-6 text-emerald-100/80">
-                Group leaders, hotels close to the Haram, document readiness and clear payment milestones. We stay with your family from
-                the first briefing to the return flight.
+                {hero.subtitle}
               </p>
               <form method="get" className="mt-6 grid gap-2 rounded-2xl border border-white/15 bg-white/10 p-2.5 backdrop-blur sm:grid-cols-[1fr_180px_auto]">
                 <div className="relative">
@@ -187,6 +191,6 @@ export default async function HajjUmrahPage({
           ))}
         </div>
       </section>
-    </>
+    </div>
   );
 }

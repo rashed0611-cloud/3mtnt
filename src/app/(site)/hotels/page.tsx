@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BedDouble, Building2, CalendarDays, Hotel, MapPin, Search, Star, Users } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
+import { PageBanner, bannerCardClass } from "@/components/public/page-banner";
 import { getPublicDatabase } from "@/lib/db/public";
 import { fallbackImage } from "@/lib/fallback-image";
 import { listCatalogCovers, listProductImages } from "@/lib/media";
 import { gradientFor, destinationInitials } from "@/lib/public";
+import { pageAccentStyle, pageContent } from "@/lib/site-pages";
 import { formatMoney } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -31,6 +33,8 @@ export default async function HotelsPage({
 }) {
   const params = await searchParams;
   const db = await getPublicDatabase();
+  const pageSettings = db.settings.pages.hotels;
+  const hero = pageContent("hotels", pageSettings);
   const covers = new Map(await listCatalogCovers("hotel"));
   for (const image of await listProductImages("hotel")) {
     if (!covers.has(image.entityId)) covers.set(image.entityId, image.url);
@@ -71,9 +75,10 @@ export default async function HotelsPage({
   const from = filtered.length ? Math.min(...filtered.map((hotel) => hotel.price)) : 0;
 
   return (
-    <>
-      <section className="border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div style={pageAccentStyle(pageSettings)}>
+      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
+        <PageBanner page={pageSettings} />
+        <div className={bannerCardClass(pageSettings, "mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8")}>
           <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary">Home</Link>
             <span>/</span>
@@ -82,11 +87,11 @@ export default async function HotelsPage({
           <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-semibold text-violet-700">
-                <Hotel className="h-3 w-3" /> {db.hotels.length} hotel partners
+                <Hotel className="h-3 w-3" /> {hero.eyebrow || `${db.hotels.length} hotel partners`}
               </span>
-              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">Hotels</h1>
+              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">{hero.heading}</h1>
               <p className="mt-1.5 max-w-2xl text-[12.5px] leading-6 text-slate-500">
-                City stays, beach resorts and family-friendly properties — checked by our operations team and bookable with transfers.
+                {hero.subtitle}
               </p>
               {stay ? (
                 <p className="mt-2 inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-[10.5px] font-semibold text-violet-700">
@@ -199,6 +204,6 @@ export default async function HotelsPage({
           </div>
         )}
       </section>
-    </>
+    </div>
   );
 }

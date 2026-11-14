@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Compass, Filter, MapPin, Search, SlidersHorizontal, Users } from "lucide-react";
 import { TourCard } from "@/components/public/tour-card";
+import { PageBanner, bannerCardClass } from "@/components/public/page-banner";
 import { Pagination } from "@/components/ui/pagination";
 import { getPublicDatabase } from "@/lib/db/public";
 import { listCatalogCovers, listProductImages } from "@/lib/media";
+import { pageAccentStyle, pageContent } from "@/lib/site-pages";
 import { titleCase } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -21,6 +23,8 @@ export default async function ToursPage({
 }) {
   const params = await searchParams;
   const db = await getPublicDatabase();
+  const pageSettings = db.settings.pages.tours;
+  const hero = pageContent("tours", pageSettings);
   const term = (params.q ?? "").trim().toLowerCase();
   const travellers = Math.max(0, Number.parseInt(params.travellers ?? "", 10) || 0);
   const destinations = Array.from(new Set(db.tours.map((tour) => tour.destination))).sort();
@@ -49,9 +53,10 @@ export default async function ToursPage({
   }
 
   return (
-    <>
-      <section className="border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div style={pageAccentStyle(pageSettings)}>
+      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
+        <PageBanner page={pageSettings} />
+        <div className={bannerCardClass(pageSettings, "mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8")}>
           <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary">Home</Link>
             <span>/</span>
@@ -60,11 +65,11 @@ export default async function ToursPage({
           <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
-                <Compass className="h-3 w-3" /> {db.tours.length} published holidays
+                <Compass className="h-3 w-3" /> {hero.eyebrow || `${db.tours.length} published holidays`}
               </span>
-              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">Holidays</h1>
+              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">{hero.heading}</h1>
               <p className="mt-1.5 max-w-2xl text-[12.5px] leading-6 text-slate-500">
-                Group departures, private itineraries and family holidays — priced transparently and operated by our own travel desk.
+                {hero.subtitle}
               </p>
             </div>
             <div className="text-right">
@@ -158,6 +163,6 @@ export default async function ToursPage({
           </div>
         )}
       </section>
-    </>
+    </div>
   );
 }

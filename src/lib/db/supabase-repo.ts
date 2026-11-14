@@ -15,6 +15,7 @@ import type {
   Invoice,
   Lead,
   LeadStatus,
+  SiteAppearance,
   Supplier,
   Task,
   TaskStatus,
@@ -526,7 +527,19 @@ export class SupabaseRepository implements Repository {
       const { data, error } = await this.client.from("app_settings").select("*").eq("id", 1).maybeSingle();
       if (error) throw new Error(error.message);
       if (!data) return normalizeSettings(buildSeedData().settings);
-      return normalizeSettings(camelize(data) as Partial<AppSettings>);
+
+      const raw = camelize(data) as Partial<AppSettings> & {
+        appearance?: Partial<SiteAppearance> & { pages?: unknown };
+      };
+
+      // Page settings ride inside the existing appearance JSONB column so the
+      // production table does not need a schema change.
+      if (raw.appearance && "pages" in raw.appearance) {
+        raw.pages = raw.appearance.pages as AppSettings["pages"];
+        delete (raw.appearance as unknown as Record<string, unknown>).pages;
+      }
+
+      return normalizeSettings(raw);
     });
   }
 
@@ -534,7 +547,12 @@ export class SupabaseRepository implements Repository {
     this.databaseCache = null;
     const current = await this.getSettings();
     const settings = normalizeSettings({ ...current, ...input });
-    const saved = await this.upsert<AppSettings>("app_settings", { id: 1, ...settings } as unknown as Json);
+    const { pages, ...columns } = settings;
+    const saved = await this.upsert<AppSettings>("app_settings", {
+      id: 1,
+      ...columns,
+      appearance: { ...settings.appearance, pages },
+    } as unknown as Json);
     await this.log("Settings Updated", "Settings", "General business settings were updated");
     return normalizeSettings(saved);
   }

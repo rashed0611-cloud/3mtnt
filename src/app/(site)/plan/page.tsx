@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, Compass, MessageSquare, Sparkles, Wand2 } from "lucide-react";
+import { PageBanner } from "@/components/public/page-banner";
 import { PlanForm } from "@/components/public/plan-form";
 import { getPublicDatabase } from "@/lib/db/public";
+import { pageAccentStyle, pageContent } from "@/lib/site-pages";
 import { formatMoney } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -31,11 +33,14 @@ const STEPS = [
 
 export default async function PlanPage() {
   const db = await getPublicDatabase();
+  const pageSettings = db.settings.pages.plan;
+  const hero = pageContent("plan", pageSettings);
   const fromPrice = db.tours.length ? Math.min(...db.tours.map((tour) => tour.adultPrice)) : 0;
 
   return (
-    <>
+    <div style={pageAccentStyle(pageSettings)}>
       <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-br from-[#042f5c] via-[#0b74de] to-[#0e9bd8] text-white">
+        <PageBanner page={pageSettings} />
         <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full border border-white/15" />
         <div className="pointer-events-none absolute -bottom-32 left-1/3 h-96 w-96 rounded-full bg-cyan-300/20 blur-3xl" />
         <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -47,15 +52,13 @@ export default async function PlanPage() {
           <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-start">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur">
-                <Sparkles className="h-3 w-3" /> Guided travel planner
+                <Sparkles className="h-3 w-3" /> {hero.eyebrow}
               </span>
               <h1 className="mt-4 max-w-xl text-[32px] font-bold leading-[1.1] tracking-tight sm:text-[42px]">
-                Describe the trip. Get a plan a specialist has checked.
+                {hero.heading}
               </h1>
               <p className="mt-3 max-w-xl text-[13px] leading-7 text-white/80">
-                Our planner pairs your preferences with the holidays, flights, hotels, visa products and pilgrimage packages the desk
-                can confirm right now. It creates a file for a named specialist — so you get a considered answer, not a generic
-                auto-reply.
+                {hero.subtitle}
               </p>
 
               <div className="mt-6 grid gap-2.5">
@@ -125,6 +128,6 @@ export default async function PlanPage() {
           </Link>
         </div>
       </section>
-    </>
+    </div>
   );
 }

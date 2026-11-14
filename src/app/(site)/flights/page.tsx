@@ -16,7 +16,9 @@ import {
 } from "lucide-react";
 import { FlightSearchForm } from "@/components/public/flight-search-form";
 import { InquiryForm } from "@/components/public/inquiry-form";
+import { PageBanner, bannerCardClass } from "@/components/public/page-banner";
 import { getPublicSettings } from "@/lib/db/public";
+import { pageAccentStyle, pageContent } from "@/lib/site-pages";
 
 export const metadata: Metadata = {
   title: "Flights",
@@ -86,11 +88,14 @@ const FAQS = [
 
 export default async function FlightsPage() {
   const settings = await getPublicSettings();
+  const pageSettings = settings.pages.flights;
+  const hero = pageContent("flights", pageSettings);
 
   return (
-    <>
-      <section className="border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div style={pageAccentStyle(pageSettings)}>
+      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
+        <PageBanner page={pageSettings} />
+        <div className={bannerCardClass(pageSettings, "mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8")}>
           <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary">Home</Link>
             <span>/</span>
@@ -99,13 +104,11 @@ export default async function FlightsPage() {
           <div className="mt-3 grid gap-6 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-2.5 py-1 text-[10px] font-semibold text-sky-700">
-                <Plane className="h-3 w-3" /> Flight desk · economy to business
+                <Plane className="h-3 w-3" /> {hero.eyebrow}
               </span>
-              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">Flights, planned properly</h1>
+              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">{hero.heading}</h1>
               <p className="mt-1.5 max-w-2xl text-[12.5px] leading-6 text-slate-500">
-                Search <span className="font-semibold text-ink">one-way, round-trip or multi-city</span> flights below for an instant
-                indicative fare band, then let the same operations team that handles your holiday, hotel or visa file confirm live
-                options. No account, no bots, no surprise connection times.
+                {hero.subtitle}
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link href="#flight-search" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-[12px] font-semibold text-white shadow-sm hover:bg-primary-strong">
@@ -261,6 +264,6 @@ export default async function FlightsPage() {
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

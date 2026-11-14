@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, FileText, LockKeyhole, ReceiptText, Ticket, UserRound } from "lucide-react";
+import { PageBanner, bannerCardClass } from "@/components/public/page-banner";
+import { getPublicSettings } from "@/lib/db/public";
+import { pageAccentStyle, pageContent } from "@/lib/site-pages";
 
 export const metadata: Metadata = {
   title: "Customer portal",
@@ -14,11 +17,16 @@ const BENEFITS = [
   { icon: UserRound, title: "Traveller profiles", text: "Keep passport and contact details up to date for every traveller." },
 ];
 
-export default function PortalPage() {
+export default async function PortalPage() {
+  const settings = await getPublicSettings();
+  const pageSettings = settings.pages.portal;
+  const hero = pageContent("portal", pageSettings);
+
   return (
-    <>
-      <section className="border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div style={pageAccentStyle(pageSettings)}>
+      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
+        <PageBanner page={pageSettings} />
+        <div className={bannerCardClass(pageSettings, "mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8")}>
           <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary">Home</Link>
             <span>/</span>
@@ -27,12 +35,11 @@ export default function PortalPage() {
           <div className="mt-4 grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
-                <LockKeyhole className="h-3 w-3" /> Portal preview
+                <LockKeyhole className="h-3 w-3" /> {hero.eyebrow}
               </span>
-              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[38px]">Your trip, in one place.</h1>
+              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[38px]">{hero.heading}</h1>
               <p className="mt-2 max-w-xl text-[12.5px] leading-6 text-slate-500">
-                The customer portal is being prepared. Soon you&apos;ll be able to sign in to view bookings, documents, invoices and
-                payment milestones without calling the office.
+                {hero.subtitle}
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link href="/contact" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-[11.5px] font-semibold text-white hover:bg-primary-strong">
@@ -89,6 +96,6 @@ export default function PortalPage() {
           </Link>
         </div>
       </section>
-    </>
+    </div>
   );
 }

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock3, FileCheck2, FileSearch, Search, Wallet } from "lucide-react";
+import { PageBanner, bannerCardClass } from "@/components/public/page-banner";
 import { getPublicDatabase } from "@/lib/db/public";
 import { fallbackImage } from "@/lib/fallback-image";
 import { listCatalogCovers, listProductImages } from "@/lib/media";
+import { pageAccentStyle, pageContent } from "@/lib/site-pages";
 import { formatMoney } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -18,6 +20,8 @@ export default async function VisasPage({
 }) {
   const params = await searchParams;
   const db = await getPublicDatabase();
+  const pageSettings = db.settings.pages.visas;
+  const hero = pageContent("visas", pageSettings);
   const covers = new Map(await listCatalogCovers("visa"));
   for (const image of await listProductImages("visa")) {
     if (!covers.has(image.entityId)) covers.set(image.entityId, image.url);
@@ -40,9 +44,10 @@ export default async function VisasPage({
     : null;
 
   return (
-    <>
-      <section className="border-b border-slate-200 bg-gradient-to-b from-[#fff8ed] to-white">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div style={pageAccentStyle(pageSettings)}>
+      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-[#fff8ed] to-white">
+        <PageBanner page={pageSettings} />
+        <div className={bannerCardClass(pageSettings, "mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8")}>
           <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary">Home</Link>
             <span>/</span>
@@ -51,12 +56,11 @@ export default async function VisasPage({
           <div className="mt-3 grid gap-6 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-700">
-                <FileCheck2 className="h-3 w-3" /> {db.visas.length} visa products · {countries.length} countries
+                <FileCheck2 className="h-3 w-3" /> {hero.eyebrow || `${db.visas.length} visa products · ${countries.length} countries`}
               </span>
-              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">Visa</h1>
+              <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">{hero.heading}</h1>
               <p className="mt-1.5 max-w-2xl text-[12.5px] leading-6 text-slate-500">
-                Clear requirements, realistic processing windows and a document checklist for every application. We prepare, check and
-                track the file from submission to decision.
+                {hero.subtitle}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -169,6 +173,6 @@ export default async function VisasPage({
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

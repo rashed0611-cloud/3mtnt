@@ -319,6 +319,26 @@ export interface SiteSeo {
   ogImageUrl: string;
 }
 
+/** Storefront pages that get their own banner and accent colour. */
+export type SitePageKey = "tours" | "hotels" | "visas" | "hajj" | "flights" | "contact" | "plan" | "portal";
+
+export interface SitePageBanner {
+  imageUrl: string;
+  overlay: number;
+}
+
+export interface SitePageSettings {
+  banner: SitePageBanner;
+  /** Empty means the page keeps its built-in badge text. */
+  eyebrow: string;
+  heading: string;
+  subtitle: string;
+  /** Empty means the page follows the site-wide brand colour. */
+  accent: string;
+}
+
+export type SitePages = Record<SitePageKey, SitePageSettings>;
+
 export interface SiteAppearance {
   brand: SiteBrand;
   colors: SiteColors;
@@ -347,6 +367,7 @@ export interface AppSettings {
   homepage: HomepageContent;
   gallery: GalleryImage[];
   appearance: SiteAppearance;
+  pages: SitePages;
 }
 
 export interface Database {

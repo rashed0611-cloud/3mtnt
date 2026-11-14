@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Clock3, Mail, MapPin, MessageCircle, Phone, ShieldCheck, Sparkles } from "lucide-react";
 import { InquiryForm } from "@/components/public/inquiry-form";
+import { PageBanner, bannerCardClass } from "@/components/public/page-banner";
 import { getPublicDatabase } from "@/lib/db/public";
+import { pageAccentStyle, pageContent } from "@/lib/site-pages";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -35,11 +37,14 @@ export default async function ContactPage({
 }) {
   const [params, db] = await Promise.all([searchParams, getPublicDatabase()]);
   const settings = db.settings;
+  const pageSettings = settings.pages.contact;
+  const hero = pageContent("contact", pageSettings);
 
   return (
-    <>
-      <section className="border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div style={pageAccentStyle(pageSettings)}>
+      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-primary/10 via-page to-white">
+        <PageBanner page={pageSettings} />
+        <div className={bannerCardClass(pageSettings, "mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8")}>
           <nav className="flex items-center gap-1.5 text-[10.5px] text-slate-400" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary">Home</Link>
             <span>/</span>
@@ -47,12 +52,11 @@ export default async function ContactPage({
           </nav>
           <div className="mt-3 max-w-2xl">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
-              <Sparkles className="h-3 w-3" /> No obligation quote
+              <Sparkles className="h-3 w-3" /> {hero.eyebrow}
             </span>
-            <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">Tell us where you want to go</h1>
+            <h1 className="mt-2 text-[30px] font-bold tracking-tight text-ink sm:text-[36px]">{hero.heading}</h1>
             <p className="mt-1.5 text-[12.5px] leading-6 text-slate-500">
-              Share a few details and a named travel specialist will reply with availability, options and a clear, itemised quote — usually
-              within one business day.
+              {hero.subtitle}
             </p>
           </div>
         </div>
@@ -141,6 +145,6 @@ export default async function ContactPage({
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

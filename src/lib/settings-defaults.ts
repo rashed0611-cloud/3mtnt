@@ -1,6 +1,16 @@
 import { DEFAULT_BODY_FONT, DEFAULT_HEADING_FONT, isFontKey } from "@/lib/fonts";
-import { normalizeHex } from "@/lib/theme";
-import type { AppSettings, GalleryImage, HomepageContent, SiteAppearance, SiteSections } from "@/lib/types";
+import { SITE_PAGES } from "@/lib/site-pages";
+import { normalizeHex, isHexColor } from "@/lib/theme";
+import type {
+  AppSettings,
+  GalleryImage,
+  HomepageContent,
+  SiteAppearance,
+  SitePageKey,
+  SitePageSettings,
+  SitePages,
+  SiteSections,
+} from "@/lib/types";
 
 export const DEFAULT_HOMEPAGE: HomepageContent = {
   eyebrow: "Trusted travel planning, end to end",
@@ -123,6 +133,19 @@ export const DEFAULT_GALLERY: GalleryImage[] = [
   },
 ];
 
+export const DEFAULT_PAGES: SitePages = Object.fromEntries(
+  SITE_PAGES.map((page) => [
+    page.key,
+    {
+      banner: { imageUrl: "", overlay: 55 },
+      eyebrow: "",
+      heading: page.heading,
+      subtitle: page.subtitle,
+      accent: "",
+    },
+  ]),
+) as SitePages;
+
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   siteName: "3M Tours & Travels ERP",
   tagline: "Travel operations, without the spreadsheets.",
@@ -141,6 +164,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   homepage: DEFAULT_HOMEPAGE,
   gallery: DEFAULT_GALLERY,
   appearance: DEFAULT_APPEARANCE,
+  pages: DEFAULT_PAGES,
 };
 
 function clamp(value: unknown, min: number, max: number, fallback: number) {
@@ -270,5 +294,28 @@ export function normalizeSettings(value: Partial<AppSettings> | null | undefined
     homepage: normalizeHomepage(settings.homepage),
     gallery: normalizeGallery(settings.gallery),
     appearance: normalizeAppearance(settings.appearance),
+    pages: normalizePages(settings.pages),
   };
+}
+
+export function normalizePages(value: unknown): SitePages {
+  const source = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  const pages = {} as SitePages;
+
+  for (const key of Object.keys(DEFAULT_PAGES) as SitePageKey[]) {
+    const raw = (source[key] ?? {}) as Partial<SitePageSettings>;
+    const banner = (raw.banner ?? {}) as { imageUrl?: unknown; overlay?: unknown };
+    pages[key] = {
+      banner: {
+        imageUrl: safeImage(banner.imageUrl),
+        overlay: Math.round(clamp(banner.overlay, 0, 85, 55)),
+      },
+      eyebrow: String(raw.eyebrow ?? "").slice(0, 80),
+      heading: String(raw.heading ?? "").slice(0, 120) || DEFAULT_PAGES[key].heading,
+      subtitle: String(raw.subtitle ?? "").slice(0, 400) || DEFAULT_PAGES[key].subtitle,
+      accent: isHexColor(raw.accent) ? normalizeHex(raw.accent, "") : "",
+    };
+  }
+
+  return pages;
 }
