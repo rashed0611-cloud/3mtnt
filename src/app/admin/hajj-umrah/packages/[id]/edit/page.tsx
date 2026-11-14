@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { requireUser } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
 import { listCatalogCovers, listImagesForProduct } from "@/lib/media";
+import { packageCoverOverlay } from "@/lib/package-covers";
 
 export const metadata: Metadata = { title: "Edit pilgrimage package" };
 
@@ -19,6 +20,7 @@ export default async function EditHajjPackagePage({ params }: { params: Promise<
   if (!pkg) notFound();
   const coverUrl = (await listCatalogCovers("hajj")).get(pkg.id);
   const relatedImages = await listImagesForProduct("hajj", pkg.id);
+  const coverOverlay = packageCoverOverlay(db.settings.packageCovers, "hajj", pkg.id);
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -39,7 +41,7 @@ export default async function EditHajjPackagePage({ params }: { params: Promise<
       />
       <Card>
         <CardContent>
-          <HajjPackageForm pkg={pkg} coverUrl={coverUrl} relatedImages={relatedImages} />
+          <HajjPackageForm pkg={pkg} coverUrl={coverUrl} coverOverlay={coverOverlay} relatedImages={relatedImages} />
         </CardContent>
       </Card>
     </div>

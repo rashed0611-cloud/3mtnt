@@ -6,6 +6,7 @@ import { getPublicDatabase } from "@/lib/db/public";
 import { fallbackImage } from "@/lib/fallback-image";
 import { PhotoStrip } from "@/components/public/photo-strip";
 import { listCatalogCovers, listImagesForProduct } from "@/lib/media";
+import { coverOverlayStyle, packageCoverOverlay } from "@/lib/package-covers";
 import { gradientFor, destinationInitials } from "@/lib/public";
 import { formatMoney } from "@/lib/utils";
 
@@ -25,6 +26,7 @@ export default async function HotelDetailPage({ params }: { params: Promise<{ sl
   const coverUrl = (await listCatalogCovers("hotel")).get(hotel.id);
   const heroImage = coverUrl || fallbackImage(hotel.location, hotel.name);
   const relatedPhotos = await listImagesForProduct("hotel", hotel.id);
+  const coverOverlay = packageCoverOverlay(db.settings.packageCovers, "hotel", hotel.id);
 
   const related = db.hotels.filter((item) => item.id !== hotel.id && item.status === "publish" && item.location === hotel.location).slice(0, 3);
   const interest = encodeURIComponent(`${hotel.name}, ${hotel.location}`);
@@ -34,7 +36,7 @@ export default async function HotelDetailPage({ params }: { params: Promise<{ sl
       <section className={`relative overflow-hidden bg-gradient-to-br ${gradientFor(hotel.location)}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/60 to-slate-950/25" />
+        <div className="absolute inset-0" style={coverOverlayStyle(coverOverlay)} />
         <div className="relative mx-auto max-w-7xl px-4 py-10 text-white sm:px-6 lg:px-8 lg:py-14">
           <nav className="flex flex-wrap items-center gap-1.5 text-[10.5px] text-white/60" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-white">Home</Link>

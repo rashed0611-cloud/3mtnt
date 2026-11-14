@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { requireUser } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
 import { listCatalogCovers, listImagesForProduct } from "@/lib/media";
+import { packageCoverOverlay } from "@/lib/package-covers";
 
 export const metadata: Metadata = { title: "Edit tour" };
 
@@ -19,6 +20,7 @@ export default async function EditTourPage({ params }: { params: Promise<{ id: s
   if (!tour) notFound();
   const coverUrl = (await listCatalogCovers("tour")).get(tour.id);
   const relatedImages = await listImagesForProduct("tour", tour.id);
+  const coverOverlay = packageCoverOverlay(db.settings.packageCovers, "tour", tour.id);
 
   return (
     <div className="mx-auto max-w-5xl space-y-4">
@@ -34,7 +36,7 @@ export default async function EditTourPage({ params }: { params: Promise<{ id: s
       />
       <Card>
         <CardContent>
-          <TourForm tour={tour} coverUrl={coverUrl} relatedImages={relatedImages} />
+          <TourForm tour={tour} coverUrl={coverUrl} coverOverlay={coverOverlay} relatedImages={relatedImages} />
         </CardContent>
       </Card>
     </div>

@@ -528,15 +528,25 @@ export class SupabaseRepository implements Repository {
       if (error) throw new Error(error.message);
       if (!data) return normalizeSettings(buildSeedData().settings);
 
+      // Read package cover keys before camelize: ids such as `hotel_001`
+      // contain `_` followed by a digit, which camelize would rewrite.
+      const rawAppearance = (data as { appearance?: Record<string, unknown> }).appearance;
+      const rawPackageCovers =
+        rawAppearance?.package_covers ?? rawAppearance?.packageCovers;
+
       const raw = camelize(data) as Partial<AppSettings> & {
-        appearance?: Partial<SiteAppearance> & { pages?: unknown };
+        appearance?: Partial<SiteAppearance> & { pages?: unknown; packageCovers?: unknown };
       };
 
-      // Page settings ride inside the existing appearance JSONB column so the
-      // production table does not need a schema change.
+      // Page settings and package cover brightness ride inside the existing
+      // appearance JSONB column so the production table needs no schema change.
       if (raw.appearance && "pages" in raw.appearance) {
         raw.pages = raw.appearance.pages as AppSettings["pages"];
         delete (raw.appearance as unknown as Record<string, unknown>).pages;
+      }
+      if (raw.appearance && rawPackageCovers !== undefined) {
+        raw.packageCovers = rawPackageCovers as AppSettings["packageCovers"];
+        delete (raw.appearance as unknown as Record<string, unknown>).packageCovers;
       }
 
       return normalizeSettings(raw);
@@ -547,11 +557,11 @@ export class SupabaseRepository implements Repository {
     this.databaseCache = null;
     const current = await this.getSettings();
     const settings = normalizeSettings({ ...current, ...input });
-    const { pages, ...columns } = settings;
+    const { pages, packageCovers, ...columns } = settings;
     const saved = await this.upsert<AppSettings>("app_settings", {
       id: 1,
       ...columns,
-      appearance: { ...settings.appearance, pages },
+      appearance: { ...settings.appearance, pages, packageCovers },
     } as unknown as Json);
     await this.log("Settings Updated", "Settings", "General business settings were updated");
     return normalizeSettings(saved);

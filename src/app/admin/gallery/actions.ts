@@ -42,6 +42,13 @@ const PUBLIC_PATHS: Record<CatalogKind, string[]> = {
   hajj: ["/", "/hajj-umrah"],
 };
 
+const DETAIL_PATH: Record<CatalogKind, string> = {
+  tour: "/tours/[slug]",
+  hotel: "/hotels/[slug]",
+  visa: "/visas/[id]",
+  hajj: "/hajj-umrah/[id]",
+};
+
 function revalidateCatalog(kind: CatalogKind) {
   revalidatePath("/admin/gallery");
   revalidatePath("/admin", "layout");
@@ -94,6 +101,36 @@ export async function uploadCatalogCoverAction(_prev: MediaActionState, formData
     return { ok: true, url, stamp: Date.now(), message: "Cover image saved." };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Could not upload the image." };
+  }
+}
+
+/** Save how dark the cover photo looks behind the package detail title. */
+export async function updatePackageCoverOverlayAction(
+  _prev: MediaActionState,
+  formData: FormData,
+): Promise<MediaActionState> {
+  const kind = readKind(formData);
+  const id = String(formData.get("id") ?? "").trim();
+  if (!kind || !id) return { error: "Save this package once, then set its cover brightness." };
+
+  await requireModuleAccess(MODULE_FOR_KIND[kind], "write");
+
+  const raw = Number(formData.get("overlay"));
+  const overlay = Math.round(Math.max(0, Math.min(85, Number.isFinite(raw) ? raw : 85)));
+
+  try {
+    const settings = await getRepository().getSettings();
+    await getRepository().updateSettings({
+      packageCovers: {
+        ...settings.packageCovers,
+        [`${kind}:${id}`]: { overlay },
+      },
+    });
+    revalidateCatalog(kind);
+    revalidatePath(DETAIL_PATH[kind], "page");
+    return { ok: true, message: `Cover overlay set to ${overlay}%.` };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not save the cover brightness." };
   }
 }
 

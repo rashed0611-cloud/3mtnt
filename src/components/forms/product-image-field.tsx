@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ImageIcon, Plus } from "lucide-react";
 import { galleryUploadHref } from "@/lib/media-links";
+import { PackageCoverOverlay } from "@/components/forms/package-cover-overlay";
 
 type CatalogKind = "tour" | "hotel" | "visa" | "hajj";
 
@@ -17,12 +18,15 @@ export function ProductImageField({
   kind,
   id,
   url,
+  overlay,
   label = "Cover image",
   hint = "Click Add image to choose a photo in the Image Gallery. It is shown on the website card and page header. Choosing a new photo replaces the current one.",
 }: {
   kind: CatalogKind;
   id?: string;
   url?: string;
+  /** Current cover brightness for the package detail hero. */
+  overlay?: number;
   label?: string;
   hint?: string;
 }) {
@@ -81,6 +85,10 @@ export function ProductImageField({
           </p>
         )}
       </div>
+
+      {id && typeof overlay === "number" ? (
+        <PackageCoverOverlay kind={kind} id={id} overlay={overlay} />
+      ) : null}
     </div>
   );
 }

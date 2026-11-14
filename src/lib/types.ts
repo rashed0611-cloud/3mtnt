@@ -348,6 +348,14 @@ export interface SitePageSettings {
 
 export type SitePages = Record<SitePageKey, SitePageSettings>;
 
+/** How dark a package cover photo looks behind the title on its detail page. */
+export interface PackageCoverSettings {
+  overlay: number;
+}
+
+/** Keyed by `<kind>:<packageId>`, for example `tour:tour_001`. */
+export type PackageCovers = Record<string, PackageCoverSettings>;
+
 export interface SiteAppearance {
   brand: SiteBrand;
   colors: SiteColors;
@@ -377,6 +385,7 @@ export interface AppSettings {
   gallery: GalleryImage[];
   appearance: SiteAppearance;
   pages: SitePages;
+  packageCovers: PackageCovers;
 }
 
 export interface Database {

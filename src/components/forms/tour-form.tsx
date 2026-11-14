@@ -21,11 +21,13 @@ export function TourForm({
   tour,
   defaultStatus = "active",
   coverUrl,
+  coverOverlay,
   relatedImages = [],
 }: {
   tour?: Tour;
   defaultStatus?: Tour["status"];
   coverUrl?: string;
+  coverOverlay?: number;
   relatedImages?: ProductGalleryImage[];
 }) {
   const [state, formAction, pending] = useActionState(createTourAction, {} as FormState);
@@ -55,7 +57,7 @@ export function TourForm({
       {tour ? <input type="hidden" name="id" value={tour.id} /> : null}
 
       <section className="space-y-4 rounded-control border border-line bg-slate-50/40 p-4">
-        <ProductImageField kind="tour" id={tour?.id} url={coverUrl} />
+        <ProductImageField kind="tour" id={tour?.id} url={coverUrl} overlay={coverOverlay} />
         <div className="border-t border-line pt-3">
           <ProductGalleryField kind="tour" id={tour?.id} images={relatedImages} />
         </div>

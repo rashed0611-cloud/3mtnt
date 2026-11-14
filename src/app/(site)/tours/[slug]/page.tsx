@@ -20,6 +20,7 @@ import { getPublicDatabase } from "@/lib/db/public";
 import { fallbackImage } from "@/lib/fallback-image";
 import { PhotoStrip } from "@/components/public/photo-strip";
 import { listCatalogCovers, listImagesForProduct, listProductImages } from "@/lib/media";
+import { coverOverlayStyle, packageCoverOverlay } from "@/lib/package-covers";
 import { gradientFor, destinationInitials } from "@/lib/public";
 import { formatMoney, titleCase } from "@/lib/utils";
 
@@ -42,6 +43,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
   const coverUrl = (await listCatalogCovers("tour")).get(tour.id);
   const heroImage = coverUrl || fallbackImage(tour.destination, tour.title);
   const relatedPhotos = await listImagesForProduct("tour", tour.id);
+  const coverOverlay = packageCoverOverlay(db.settings.packageCovers, "tour", tour.id);
 
   const catalogImages = new Map(await listCatalogCovers("tour"));
   for (const image of await listProductImages("tour")) {
@@ -72,7 +74,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
       <section className={`relative overflow-hidden bg-gradient-to-br ${gradientFor(tour.destination)}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/60 to-slate-950/25" />
+        <div className="absolute inset-0" style={coverOverlayStyle(coverOverlay)} />
         <div className="relative mx-auto max-w-7xl px-4 py-10 text-white sm:px-6 lg:px-8 lg:py-14">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide backdrop-blur">{titleCase(tour.type)}</span>

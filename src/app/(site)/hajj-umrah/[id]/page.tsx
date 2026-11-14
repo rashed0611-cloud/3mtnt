@@ -6,6 +6,7 @@ import { getPublicDatabase } from "@/lib/db/public";
 import { fallbackImage } from "@/lib/fallback-image";
 import { PhotoStrip } from "@/components/public/photo-strip";
 import { listCatalogCovers, listImagesForProduct } from "@/lib/media";
+import { coverOverlayStyle, packageCoverOverlay } from "@/lib/package-covers";
 import { formatDate, formatMoney, percent, titleCase } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -24,6 +25,7 @@ export default async function HajjPackageDetailPage({ params }: { params: Promis
   const coverUrl = (await listCatalogCovers("hajj")).get(pkg.id);
   const heroImage = coverUrl || fallbackImage(pkg.title, pkg.kind, "hajj");
   const relatedPhotos = await listImagesForProduct("hajj", pkg.id);
+  const coverOverlay = packageCoverOverlay(db.settings.packageCovers, "hajj", pkg.id);
 
   const used = percent(pkg.booked, pkg.capacity);
   const remaining = Math.max(0, pkg.capacity - pkg.booked);
@@ -45,7 +47,7 @@ export default async function HajjPackageDetailPage({ params }: { params: Promis
       <section className="relative overflow-hidden bg-gradient-to-br from-[#07332a] via-[#0a4a3b] to-[#0b6b4f] text-white">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#04231c]/90 via-[#07332a]/75 to-[#07332a]/35" />
+        <div className="absolute inset-0" style={coverOverlayStyle(coverOverlay, "4,35,28")} />
         <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full border border-emerald-300/20" />
         <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
           <nav className="flex flex-wrap items-center gap-1.5 text-[10.5px] text-emerald-100/60" aria-label="Breadcrumb">

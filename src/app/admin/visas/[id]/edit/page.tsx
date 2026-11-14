@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { requireUser } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
 import { listCatalogCovers, listImagesForProduct } from "@/lib/media";
+import { packageCoverOverlay } from "@/lib/package-covers";
 
 export const metadata: Metadata = { title: "Edit visa product" };
 
@@ -19,6 +20,7 @@ export default async function EditVisaPage({ params }: { params: Promise<{ id: s
   if (!visa) notFound();
   const coverUrl = (await listCatalogCovers("visa")).get(visa.id);
   const relatedImages = await listImagesForProduct("visa", visa.id);
+  const coverOverlay = packageCoverOverlay(db.settings.packageCovers, "visa", visa.id);
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -34,7 +36,7 @@ export default async function EditVisaPage({ params }: { params: Promise<{ id: s
       />
       <Card>
         <CardContent>
-          <VisaForm visa={visa} coverUrl={coverUrl} relatedImages={relatedImages} />
+          <VisaForm visa={visa} coverUrl={coverUrl} coverOverlay={coverOverlay} relatedImages={relatedImages} />
         </CardContent>
       </Card>
     </div>

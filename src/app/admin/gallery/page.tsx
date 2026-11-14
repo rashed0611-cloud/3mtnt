@@ -8,6 +8,7 @@ import { requireModuleAccess } from "@/lib/auth";
 import { getRepository } from "@/lib/db";
 import { isCatalogKind, listMediaLibrary, MEDIA_MODULES, type CatalogKind } from "@/lib/media";
 import { toMediaDisplayUrl } from "@/lib/media-url";
+import { packageCoverOverlay } from "@/lib/package-covers";
 import { isSitePageKey, sitePageDefinition } from "@/lib/site-pages";
 
 export const metadata: Metadata = { title: "Image gallery" };
@@ -51,6 +52,7 @@ export default async function GalleryPage({
           name: productNames.get(`${kind}:${id}`) ?? id,
           slot: params.slot === "related" ? ("related" as const) : ("cover" as const),
           editHref: EDIT_HREF[kind](id),
+          overlay: packageCoverOverlay(db.settings.packageCovers, kind, id),
         }
       : undefined;
 

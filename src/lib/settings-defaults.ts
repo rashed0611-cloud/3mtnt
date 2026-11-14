@@ -1,10 +1,12 @@
 import { DEFAULT_BODY_FONT, DEFAULT_HEADING_FONT, isFontKey } from "@/lib/fonts";
+import { DEFAULT_PACKAGE_OVERLAY } from "@/lib/package-covers";
 import { SITE_PAGES } from "@/lib/site-pages";
 import { normalizeHex, isHexColor } from "@/lib/theme";
 import type {
   AppSettings,
   GalleryImage,
   HomepageContent,
+  PackageCovers,
   SiteAppearance,
   SitePageKey,
   SitePageSettings,
@@ -146,6 +148,8 @@ export const DEFAULT_PAGES: SitePages = Object.fromEntries(
   ]),
 ) as SitePages;
 
+export const DEFAULT_PACKAGE_COVERS: PackageCovers = {};
+
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   siteName: "3M Tours & Travels ERP",
   tagline: "Travel operations, without the spreadsheets.",
@@ -165,6 +169,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   gallery: DEFAULT_GALLERY,
   appearance: DEFAULT_APPEARANCE,
   pages: DEFAULT_PAGES,
+  packageCovers: DEFAULT_PACKAGE_COVERS,
 };
 
 function clamp(value: unknown, min: number, max: number, fallback: number) {
@@ -295,6 +300,7 @@ export function normalizeSettings(value: Partial<AppSettings> | null | undefined
     gallery: normalizeGallery(settings.gallery),
     appearance: normalizeAppearance(settings.appearance),
     pages: normalizePages(settings.pages),
+    packageCovers: normalizePackageCovers(settings.packageCovers),
   };
 }
 
@@ -318,4 +324,24 @@ export function normalizePages(value: unknown): SitePages {
   }
 
   return pages;
+}
+
+/**
+ * Package cover brightness is stored next to the page settings inside the
+ * existing appearance JSONB column, so no schema change is needed.
+ */
+export function normalizePackageCovers(value: unknown): PackageCovers {
+  const source = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  const covers: PackageCovers = {};
+
+  for (const [key, raw] of Object.entries(source)) {
+    if (!/^(tour|hotel|visa|hajj):[\w-]+$/.test(key)) continue;
+    const overlay =
+      raw && typeof raw === "object" ? (raw as { overlay?: unknown }).overlay : raw;
+    covers[key] = {
+      overlay: Math.round(clamp(overlay, 0, 85, DEFAULT_PACKAGE_OVERLAY)),
+    };
+  }
+
+  return covers;
 }

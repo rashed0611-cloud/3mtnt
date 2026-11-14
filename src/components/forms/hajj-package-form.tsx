@@ -13,10 +13,12 @@ import type { HajjPackage } from "@/lib/types";
 export function HajjPackageForm({
   pkg,
   coverUrl,
+  coverOverlay,
   relatedImages = [],
 }: {
   pkg?: HajjPackage;
   coverUrl?: string;
+  coverOverlay?: number;
   relatedImages?: ProductGalleryImage[];
 }) {
   const [state, formAction, pending] = useActionState(saveHajjPackageAction, {} as FormState);
@@ -37,6 +39,7 @@ export function HajjPackageForm({
           kind="hajj"
           id={pkg?.id}
           url={coverUrl}
+          overlay={coverOverlay}
           hint="Shown on the pilgrimage card and detail page. JPG, PNG, WebP or AVIF up to 4 MB."
         />
         <div className="border-t border-line pt-3">

@@ -13,10 +13,12 @@ import type { VisaPackage } from "@/lib/types";
 export function VisaForm({
   visa,
   coverUrl,
+  coverOverlay,
   relatedImages = [],
 }: {
   visa?: VisaPackage;
   coverUrl?: string;
+  coverOverlay?: number;
   relatedImages?: ProductGalleryImage[];
 }) {
   const [state, formAction, pending] = useActionState(saveVisaAction, {} as FormState);
@@ -37,6 +39,7 @@ export function VisaForm({
           kind="visa"
           id={visa?.id}
           url={coverUrl}
+          overlay={coverOverlay}
           hint="Shown on the visa card and detail page. JPG, PNG, WebP or AVIF up to 4 MB."
         />
         <div className="border-t border-line pt-3">

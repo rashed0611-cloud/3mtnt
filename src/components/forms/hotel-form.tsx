@@ -13,10 +13,12 @@ import type { Hotel } from "@/lib/types";
 export function HotelForm({
   hotel,
   coverUrl,
+  coverOverlay,
   relatedImages = [],
 }: {
   hotel?: Hotel;
   coverUrl?: string;
+  coverOverlay?: number;
   relatedImages?: ProductGalleryImage[];
 }) {
   const [state, formAction, pending] = useActionState(saveHotelAction, {} as FormState);
@@ -33,7 +35,7 @@ export function HotelForm({
       {hotel ? <input type="hidden" name="id" value={hotel.id} /> : null}
 
       <section className="space-y-4 rounded-control border border-line bg-slate-50/40 p-4">
-        <ProductImageField kind="hotel" id={hotel?.id} url={coverUrl} />
+        <ProductImageField kind="hotel" id={hotel?.id} url={coverUrl} overlay={coverOverlay} />
         <div className="border-t border-line pt-3">
           <ProductGalleryField kind="hotel" id={hotel?.id} images={relatedImages} />
         </div>

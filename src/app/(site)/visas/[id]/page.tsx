@@ -6,6 +6,7 @@ import { getPublicDatabase } from "@/lib/db/public";
 import { fallbackImage } from "@/lib/fallback-image";
 import { PhotoStrip } from "@/components/public/photo-strip";
 import { listCatalogCovers, listImagesForProduct } from "@/lib/media";
+import { coverOverlayStyle, packageCoverOverlay } from "@/lib/package-covers";
 import { formatMoney } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -24,6 +25,7 @@ export default async function VisaDetailPage({ params }: { params: Promise<{ id:
   const coverUrl = (await listCatalogCovers("visa")).get(visa.id);
   const heroImage = coverUrl || fallbackImage(visa.country, visa.visaType);
   const relatedPhotos = await listImagesForProduct("visa", visa.id);
+  const coverOverlay = packageCoverOverlay(db.settings.packageCovers, "visa", visa.id);
 
   const interest = encodeURIComponent(`${visa.country} ${visa.visaType} visa`);
   const others = db.visas.filter((item) => item.id !== visa.id && item.status === "active" && item.country === visa.country);
@@ -33,7 +35,7 @@ export default async function VisaDetailPage({ params }: { params: Promise<{ id:
       <section className="relative overflow-hidden bg-gradient-to-br from-amber-700 via-amber-600 to-amber-500 text-white">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/60 to-slate-950/25" />
+        <div className="absolute inset-0" style={coverOverlayStyle(coverOverlay)} />
         <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
           <nav className="flex flex-wrap items-center gap-1.5 text-[10.5px] text-white/60" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-white">Home</Link>

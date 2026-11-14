@@ -25,6 +25,7 @@ import {
   usePageBannerAction,
   type MediaActionState,
 } from "@/app/admin/gallery/actions";
+import { PackageCoverOverlay } from "@/components/forms/package-cover-overlay";
 import { toAbsoluteMediaUrl } from "@/lib/media-url";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,7 @@ export interface GalleryTarget {
   name: string;
   slot: "cover" | "related";
   editHref: string;
+  overlay: number;
 }
 
 export interface GalleryPageTarget {
@@ -342,6 +344,9 @@ export function GalleryManager({
                   if (event.currentTarget.files?.length) uploadRelated(event.currentTarget.files);
                 }}
               />
+              {target.slot === "cover" ? (
+                <PackageCoverOverlay kind={target.kind} id={target.id} overlay={target.overlay} />
+              ) : null}
             </>
           ) : (
             <p className="rounded-control border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-5 text-amber-900">
