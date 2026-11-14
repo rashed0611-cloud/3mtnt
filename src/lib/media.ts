@@ -434,10 +434,13 @@ export const listMediaLibrary = cache(async (): Promise<MediaItem[]> => {
     const rows = configured ? await listSupabaseFolder(`catalog/${kind}`) : await listLocalFolder("catalog", kind);
     for (const row of rows) {
       const objectPath = `catalog/${kind}/${row.name}`;
+      const base = configured ? supabasePublicUrl(objectPath) : `/uploads/${objectPath}`;
       items.push({
         path: objectPath,
         name: row.name,
-        url: configured ? supabasePublicUrl(objectPath) : `/uploads/${objectPath}`,
+        // Covers keep their path when replaced; the version keeps the
+        // gallery thumbnail in step with the new photo.
+        url: row.updatedAt ? `${base}?v=${encodeURIComponent(row.updatedAt)}` : base,
         folder: `catalog/${kind}`,
         group: "catalog",
         kind,

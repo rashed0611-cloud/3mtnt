@@ -58,6 +58,11 @@ export interface GalleryItem {
   usedBy?: string;
 }
 
+/** Compare stored media paths without their cache-busting version. */
+function withoutVersion(url: string) {
+  return url.split("?")[0];
+}
+
 const FILTERS = [
   { key: "all", label: "All images" },
   { key: "cover", label: "Covers" },
@@ -529,7 +534,7 @@ export function GalleryManager({
                     <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[9.5px] font-semibold text-white">
                       <Check className="h-2.5 w-2.5" /> {target.slot === "cover" ? "Current cover" : "In this package"}
                     </span>
-                  ) : pageTarget && pageTarget.currentBanner === item.url ? (
+                  ) : pageTarget && withoutVersion(pageTarget.currentBanner) === withoutVersion(item.url) ? (
                     <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[9.5px] font-semibold text-white">
                       <Check className="h-2.5 w-2.5" /> Current banner
                     </span>
@@ -577,11 +582,11 @@ export function GalleryManager({
                     <button
                       type="button"
                       onClick={() => usePageBanner(item)}
-                      disabled={attaching || pageTarget.currentBanner === item.url}
+                      disabled={attaching || withoutVersion(pageTarget.currentBanner) === withoutVersion(item.url)}
                       className="inline-flex w-full items-center justify-center gap-1 rounded-control bg-primary px-2 py-1.5 text-[10.5px] font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
                     >
                       {attaching ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
-                      {pageTarget.currentBanner === item.url ? "Current banner" : "Use as banner"}
+                      {withoutVersion(pageTarget.currentBanner) === withoutVersion(item.url) ? "Current banner" : "Use as banner"}
                     </button>
                   ) : null}
 
